@@ -55,10 +55,11 @@ ext {
   mockitoVersion = "1.9.5"
   hazelcastVersion = "3.0.2"
   nettyVersion = "4.0.9.Final"
+  camelVersion = "2.12.0"
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 
   maven {
     url "http://download.eclipse.org/rt/eclipselink/maven.repo"
@@ -66,8 +67,8 @@ repositories {
 }
 
 dependencies {
-    scalaTools group:"org.scala-lang", name:"scala-compiler", version:ext.scalaVersion
-    compile group:"org.scala-lang", name:"scala-library", version:ext.scalaVersion
+  scalaTools group:"org.scala-lang", name:"scala-compiler", version:ext.scalaVersion
+  compile group:"org.scala-lang", name:"scala-library", version:ext.scalaVersion
 
   testCompile group:"junit",name:"junit",version:ext.junitVersion
   testCompile group:"org.scalatest",name:"scalatest_2.10",version:ext.testVersion
@@ -78,20 +79,17 @@ dependencies {
   compile group:"commons-collections", name:"commons-collections", version:ext.collectionsVersion
   compile group:"org.apache.derby", name:"derby", version:ext.derbyVersion
 
-  compile group:"org.springframework", name:"spring-core", version:ext.springVersion
-  compile group:"org.springframework", name:"spring-beans", version:ext.springVersion
-  compile group:"org.springframework", name:"spring-context", version:ext.springVersion
-  compile group:"org.springframework", name:"spring-context-support", version:ext.springVersion
-
   compile group:"org.eclipse.persistence", name:"eclipselink", version:ext.eclipseVersion
   compile group:"com.fasterxml.jackson.core", name:"jackson-core", version:ext.jacksonVersion
   compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version:ext.jacksonVersion
 
   compile group:"io.netty",name:"netty-all",version:ext.nettyVersion
   compile group:"com.hazelcast",name:"hazelcast",version:ext.hazelcastVersion
+  compile group:"org.apache.camel",name:"camel",version:ext.camelVersion
+  compile group:"org.apache.camel",name:"camel-scala",version:ext.camelVersion
 
-    compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
-    compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
+  compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
+  compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
 }
 
 sourceSets {
@@ -121,12 +119,3 @@ eclipse {
 
 applicationDistribution.from("$projectDir/config") {
 }
-
-
-
-
-
-
-
-
-
