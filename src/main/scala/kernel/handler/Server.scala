@@ -1,15 +1,16 @@
 package kernel.handler
+
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.handler.codec.http.DefaultFullHttpResponse
-import io.netty.handler.codec.http.HttpRequest
 import io.netty.util.CharsetUtil
+import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.HttpHeaders.Names._
 import io.netty.handler.codec.http.HttpHeaders._
 import io.netty.handler.codec.http.HttpResponseStatus._
 import io.netty.handler.codec.http.HttpVersion._
+import io.netty.handler.codec.http.websocketx._
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpServerCodec
@@ -17,6 +18,33 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.ssl.SslHandler;
+import javax.net.ssl.SSLEngine;
+import kernel.runtime.{Responder => Res}
+
+class Request {
+
+}
+
+class Response {
+
+}
+
+class Responder extends kernel.runtime.Responder[Request,Response] {
+    override def respond(request:Request):Response = {
+        null
+    }
+}
+
+class CustomTextFrameHandler extends SimpleChannelInboundHandler[TextWebSocketFrame] {
+    protected override def channelRead0(ctx:ChannelHandlerContext, frame:TextWebSocketFrame):Unit = {
+        val request = frame.text();
+        ctx.channel().writeAndFlush(new TextWebSocketFrame(request.toUpperCase()));
+    }
+}
 
 class Handler extends ChannelInboundHandlerAdapter {
     private val CONTENT =
@@ -55,20 +83,18 @@ class Handler extends ChannelInboundHandlerAdapter {
 
 class Initializer extends ChannelInitializer[SocketChannel] {
     override def initChannel(ch:SocketChannel) {
-        val p = ch.pipeline();
-
-        /*val engine = SecureChatSslContextFactory.getServerContext().createSSLEngine();
-        engine.setUseClientMode(false);
-        p.addLast("ssl", new SslHandler(engine));*/
-
+      val p = ch.pipeline()
         p.addLast("codec", new HttpServerCodec());
+        // p.addLast("decoder", new HttpRequestDecoder());
+        // p.addLast("aggregator", new HttpObjectAggregator(65536));
+        // p.addLast("encoder", new HttpResponseEncoder());
+        // p.addLast("socket", new WebSocketServerProtocolHandler("/websocket"));
         p.addLast("handler", new Handler());
     }
 }
 
 class Server(port:Int) {
     def run() {
-        // Configure the server.
         val bossGroup = new NioEventLoopGroup();
         val workerGroup = new NioEventLoopGroup();
         try {
