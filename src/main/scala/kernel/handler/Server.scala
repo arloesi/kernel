@@ -23,73 +23,73 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.ssl.SslHandler;
 import javax.net.ssl.SSLEngine;
-import kernel.runtime.{Responder => Res}
 
-class Request {
-
+class Request(val context:ChannelHandlerContext, request:HttpRequest, buffer:io.netty.buffer.ByteBuf) {
+    val response = new Response(context, buffer, request)
+    def headers = request.headers()
+    def method = request.getMethod()
 }
 
-class Response {
+class Response(val context:ChannelHandlerContext, val buffer:io.netty.buffer.ByteBuf, request:HttpRequest) {
+    val response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer)
+    def headers = response.headers()
+    def keepAlive = isKeepAlive(request)
 
-}
+    def write(content:String) {
+      buffer.writeBytes(Unpooled.copiedBuffer(content, CharsetUtil.US_ASCII));
+    }
 
-class Responder extends kernel.runtime.Responder[Request,Response] {
-    override def respond(request:Request):Response = {
-        null
+    def send() {
+      if (!keepAlive) {
+            context.write(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            response.headers.set(CONNECTION, Values.KEEP_ALIVE);
+            context.write(response);
+        }
     }
 }
 
-class CustomTextFrameHandler extends SimpleChannelInboundHandler[TextWebSocketFrame] {
-    protected override def channelRead0(ctx:ChannelHandlerContext, frame:TextWebSocketFrame):Unit = {
-        val request = frame.text();
-        ctx.channel().writeAndFlush(new TextWebSocketFrame(request.toUpperCase()));
-    }
-}
+object Server {
+    private class Handler extends ChannelInboundHandlerAdapter {
+        override def channelReadComplete(ctx:ChannelHandlerContext) {
+            ctx.flush();
+        }
 
-class Handler extends ChannelInboundHandlerAdapter {
-    private val CONTENT =
-            Unpooled.unreleasableBuffer(Unpooled.copiedBuffer("Hello World", CharsetUtil.US_ASCII));
+        override def channelRead(ctx:ChannelHandlerContext, msg:Object) {
+            if (msg.isInstanceOf[HttpRequest]) {
+                val req = msg.asInstanceOf[HttpRequest];
 
-    override def channelReadComplete(ctx:ChannelHandlerContext) {
-        ctx.flush();
-    }
+                if (is100ContinueExpected(req)) {
+                    ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
+                }
 
-    override def channelRead(ctx:ChannelHandlerContext, msg:Object) {
-        if (msg.isInstanceOf[HttpRequest]) {
-            val req = msg.asInstanceOf[HttpRequest];
+                val keepAlive = isKeepAlive(req);
+                val request = new Request(ctx, req, Unpooled.buffer());
+                val response = request.response
 
-            if (is100ContinueExpected(req)) {
-                ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
+                response.headers.set(CONTENT_TYPE, "text/plain");
+                response.headers.set(CONTENT_LENGTH, response.buffer.readableBytes());
+                response.write("Test Response")
+                response.send()
             }
-            val keepAlive = isKeepAlive(req);
-            val response = new DefaultFullHttpResponse(HTTP_1_1, OK, CONTENT.duplicate());
-            response.headers().set(CONTENT_TYPE, "text/plain");
-            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        }
 
-            if (!keepAlive) {
-                ctx.write(response).addListener(ChannelFutureListener.CLOSE);
-            } else {
-                response.headers().set(CONNECTION, Values.KEEP_ALIVE);
-                ctx.write(response);
-            }
+        override def exceptionCaught(ctx:ChannelHandlerContext, cause:Throwable) {
+            cause.printStackTrace();
+            ctx.close();
         }
     }
 
-    override def exceptionCaught(ctx:ChannelHandlerContext, cause:Throwable) {
-        cause.printStackTrace();
-        ctx.close();
-    }
-}
-
-class Initializer extends ChannelInitializer[SocketChannel] {
-    override def initChannel(ch:SocketChannel) {
-      val p = ch.pipeline()
-        p.addLast("codec", new HttpServerCodec());
-        // p.addLast("decoder", new HttpRequestDecoder());
-        // p.addLast("aggregator", new HttpObjectAggregator(65536));
-        // p.addLast("encoder", new HttpResponseEncoder());
-        // p.addLast("socket", new WebSocketServerProtocolHandler("/websocket"));
-        p.addLast("handler", new Handler());
+    class Initializer extends ChannelInitializer[SocketChannel] {
+        override def initChannel(ch:SocketChannel) {
+          val p = ch.pipeline()
+            p.addLast("codec", new HttpServerCodec());
+            // p.addLast("decoder", new HttpRequestDecoder());
+            // p.addLast("aggregator", new HttpObjectAggregator(65536));
+            // p.addLast("encoder", new HttpResponseEncoder());
+            // p.addLast("socket", new WebSocketServerProtocolHandler("/websocket"));
+            p.addLast("handler", new Handler());
+        }
     }
 }
 
@@ -102,7 +102,7 @@ class Server(port:Int) {
             b.option(ChannelOption.SO_BACKLOG, new Integer(1024));
             b.group(bossGroup, workerGroup)
              .channel(classOf[NioServerSocketChannel])
-             .childHandler(new Initializer());
+             .childHandler(new Server.Initializer());
 
             val ch = b.bind(port).sync().channel();
             ch.closeFuture().sync();
