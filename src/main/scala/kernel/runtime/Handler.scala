@@ -9,7 +9,13 @@ trait Handler[T] {
 
 object Handler {
     implicit def handler[T](fun:T=>Unit):Handler[T] =
-      new Handler[T]() { override def handle(message:T) = fun(message)}
+        new Handler[T]() { override def handle(message:T) = fun(message)}
+
+    implicit def event[T](fun:T=>Unit):Event[T] = {
+        val event = new Event[T]()
+        event.handlers.add(fun)
+        event
+    }
 }
 
 class Event[T] {

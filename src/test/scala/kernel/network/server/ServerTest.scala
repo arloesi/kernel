@@ -1,11 +1,13 @@
 package kernel.network.server
 
+import java.net.URI
 import org.junit._
 import org.junit.Assert._
 import java.net.URL
 import java.net.HttpURLConnection
 import org.apache.commons.io.IOUtils
 import kernel.runtime.Handler.handler
+import io.netty.util.CharsetUtil
 
 class ServerTest {
     var server:Server = _
@@ -27,21 +29,17 @@ class ServerTest {
         val body = "<div>Test Content</div>"
 
         server.http.handlers.add(
-            (request:Request) => request.response.send(body))
+            (request:Request) => {
+              request.response.send(body)
+            })
 
-        val req = request("GET")
-        val rsp = IOUtils.toString(req.getInputStream())
+        val req = new kernel.network.client.Request(new URI("http://localhost:8080"))
+        req.sendAndWait()
 
-        assertTrue(req.getResponseCode() == 200)
+        val ret = req.response.statusCode
+        val rsp = req.response.buffer.toString(CharsetUtil.UTF_8)
+
+        assertTrue(ret == 200)
         assertEquals(rsp,body)
-    }
-
-    def request(method:String) = {
-        val uri = new URL("http://localhost:8080")
-
-        val req = uri.openConnection().asInstanceOf[HttpURLConnection]
-        req.setRequestMethod(method)
-
-        req
     }
 }

@@ -50,7 +50,7 @@ object Server {
                 new HttpRequestDecoder(),
                 new HttpObjectAggregator(65536),
                 new HttpResponseEncoder(),
-                new WebSocketServerProtocolHandler("/websocket"),
+                // new WebSocketServerProtocolHandler("/websocket"),
                 new Handler(http))
         }
     }

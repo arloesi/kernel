@@ -31,7 +31,7 @@ class Response(val context:ChannelHandlerContext, val buffer:ByteBuf, request:Ht
     }
 
     def write(content:String) {
-        write(Unpooled.copiedBuffer(content, CharsetUtil.US_ASCII))
+        write(Unpooled.copiedBuffer(content, CharsetUtil.UTF_8))
     }
 
     def send() {
