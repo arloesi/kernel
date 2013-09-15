@@ -1,6 +1,6 @@
 package kernel.runtime;
 
-import kernel.network.Server;
+import kernel.network.server.Server;
 
 public class Runner {
     private final Server server;

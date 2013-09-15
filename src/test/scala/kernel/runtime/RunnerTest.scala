@@ -2,7 +2,7 @@ package kernel.runtime
 
 import org.junit.Test
 import org.mockito.Mockito._
-import kernel.network.Server
+import kernel.network.server.Server
 
 class RunnerTest {
     @Test

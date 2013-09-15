@@ -1,9 +1,8 @@
-package kernel.network
+package kernel.network.server
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.CharsetUtil
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.HttpHeaders.Names._
@@ -11,18 +10,7 @@ import io.netty.handler.codec.http.HttpHeaders._
 import io.netty.handler.codec.http.HttpResponseStatus._
 import io.netty.handler.codec.http.HttpVersion._
 import io.netty.handler.codec.http.websocketx._
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelOption
-import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
-import io.netty.handler.ssl.SslHandler
-import javax.net.ssl.SSLEngine
 import io.netty.buffer.ByteBuf
 
 class Request(val context:ChannelHandlerContext, request:HttpRequest, buffer:io.netty.buffer.ByteBuf) {

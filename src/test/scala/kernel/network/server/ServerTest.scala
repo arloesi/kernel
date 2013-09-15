@@ -1,4 +1,4 @@
-package kernel.network
+package kernel.network.server
 
 import org.junit._
 import org.junit.Assert._

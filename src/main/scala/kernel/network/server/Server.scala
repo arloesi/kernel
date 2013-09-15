@@ -1,10 +1,8 @@
-package kernel.network
+package kernel.network.server
 
 import io.netty.buffer.Unpooled
-import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.util.CharsetUtil
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.HttpHeaders.Names._
 import io.netty.handler.codec.http.HttpHeaders._
@@ -13,19 +11,14 @@ import io.netty.handler.codec.http.HttpVersion._
 import io.netty.handler.codec.http.websocketx._
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.ssl.SslHandler;
-import javax.net.ssl.SSLEngine;
-
+import io.netty.channel.ChannelHandlerContext
 import kernel.runtime._
 import kernel.runtime.System._
+import io.netty.channel.socket.nio.NioServerSocketChannel
 
 object Server {
     private class Handler(handlers:Event[Request]) extends ChannelInboundHandlerAdapter {
@@ -53,13 +46,12 @@ object Server {
 
     class Initializer(http:Event[Request]) extends ChannelInitializer[SocketChannel] {
         override def initChannel(ch:SocketChannel) {
-          val p = ch.pipeline()
-            p.addLast("codec", new HttpServerCodec());
-            // p.addLast("decoder", new HttpRequestDecoder());
-            // p.addLast("aggregator", new HttpObjectAggregator(65536));
-            // p.addLast("encoder", new HttpResponseEncoder());
-            // p.addLast("socket", new WebSocketServerProtocolHandler("/websocket"));
-            p.addLast("handler", new Handler(http));
+            ch.pipeline().addLast(
+                new HttpRequestDecoder(),
+                new HttpObjectAggregator(65536),
+                new HttpResponseEncoder(),
+                new WebSocketServerProtocolHandler("/websocket"),
+                new Handler(http))
         }
     }
 }
