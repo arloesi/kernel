@@ -1,9 +1,10 @@
-package kernel.runtime;
+package kernel
 
 import org.junit.Test
 import org.mockito.Mockito._
 
-import kernel.handler.Server
+import kernel.runtime.Runner
+import kernel.network.Server
 
 class RunnerTest {
     @Test
@@ -16,6 +17,6 @@ class RunnerTest {
       runner.run()
 
       // then
-      verify(server).run()
+      verify(server).start()
     }
 }

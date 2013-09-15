@@ -1,16 +1,16 @@
 package kernel.runtime;
 
-import kernel.handler.Server;
+import kernel.network.Server;
 
 public class Runner {
     private final Server server;
 
-    Runner(Server server) {
+    public Runner(Server server) {
         this.server = server;
     }
 
-    void run() {
-        server.run();
+    public void run() {
+        server.start();
     }
 
     public static void main(String [] args) {

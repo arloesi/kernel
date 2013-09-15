@@ -1,4 +1,4 @@
-package kernel.handler
+package kernel.network
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
@@ -23,31 +23,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.ssl.SslHandler;
 import javax.net.ssl.SSLEngine;
-
-class Request(val context:ChannelHandlerContext, request:HttpRequest, buffer:io.netty.buffer.ByteBuf) {
-    val response = new Response(context, buffer, request)
-    def headers = request.headers()
-    def method = request.getMethod()
-}
-
-class Response(val context:ChannelHandlerContext, val buffer:io.netty.buffer.ByteBuf, request:HttpRequest) {
-    val response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer)
-    def headers = response.headers()
-    def keepAlive = isKeepAlive(request)
-
-    def write(content:String) {
-      buffer.writeBytes(Unpooled.copiedBuffer(content, CharsetUtil.US_ASCII));
-    }
-
-    def send() {
-      if (!keepAlive) {
-            context.write(response).addListener(ChannelFutureListener.CLOSE);
-        } else {
-            response.headers.set(CONNECTION, Values.KEEP_ALIVE);
-            context.write(response);
-        }
-    }
-}
+import kernel.runtime.System._
 
 object Server {
     private class Handler extends ChannelInboundHandlerAdapter {
@@ -63,13 +39,13 @@ object Server {
                     ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
                 }
 
-                val keepAlive = isKeepAlive(req);
                 val request = new Request(ctx, req, Unpooled.buffer());
                 val response = request.response
 
+                response.write("Test Response")
                 response.headers.set(CONTENT_TYPE, "text/plain");
                 response.headers.set(CONTENT_LENGTH, response.buffer.readableBytes());
-                response.write("Test Response")
+
                 response.send()
             }
         }
@@ -94,7 +70,10 @@ object Server {
 }
 
 class Server(port:Int) {
-    def run() {
+    var future:io.netty.channel.ChannelFuture = null
+    var channel:io.netty.channel.Channel = null
+
+    def start() = fork (() => {
         val bossGroup = new NioEventLoopGroup();
         val workerGroup = new NioEventLoopGroup();
         try {
@@ -102,13 +81,19 @@ class Server(port:Int) {
             b.option(ChannelOption.SO_BACKLOG, new Integer(1024));
             b.group(bossGroup, workerGroup)
              .channel(classOf[NioServerSocketChannel])
-             .childHandler(new Server.Initializer());
+             .childHandler(new Server.Initializer())
 
-            val ch = b.bind(port).sync().channel();
-            ch.closeFuture().sync();
+            channel = b.bind(port).sync().channel()
+            future = channel.closeFuture()
+            future.sync()
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    })
+
+    def stop() {
+        channel.close()
+        future.sync()
     }
 }
