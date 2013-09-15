@@ -77,6 +77,7 @@ dependencies {
   compile group:"org.apache.commons", name:"commons-lang3", version:ext.langVersion
   compile group:"org.apache.commons", name:"commons-io", version:ext.ioVersion
   compile group:"commons-collections", name:"commons-collections", version:ext.collectionsVersion
+  compile group:"com.google.guava", name:"guava", version:"15.0"
   compile group:"org.apache.derby", name:"derby", version:ext.derbyVersion
 
   compile group:"org.eclipse.persistence", name:"eclipselink", version:ext.eclipseVersion
