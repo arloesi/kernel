@@ -1,17 +1,13 @@
-package kernel
+package kernel.network
 
 import org.junit._
 import org.junit.Assert._
-
 import java.net.URL
 import java.net.HttpURLConnection
-
 import org.apache.commons.io.IOUtils
+import kernel.runtime.Handler.handler
 
-import kernel.network.Request
-import kernel.network.Server
-
-class NetworkTest {
+class ServerTest {
     var server:Server = _
 
     @Before

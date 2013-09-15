@@ -1,9 +1,7 @@
-package kernel
+package kernel.runtime
 
 import org.junit.Test
 import org.mockito.Mockito._
-
-import kernel.runtime.Runner
 import kernel.network.Server
 
 class RunnerTest {
