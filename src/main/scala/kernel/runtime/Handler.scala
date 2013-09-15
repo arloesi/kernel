@@ -7,8 +7,9 @@ trait Handler[T] {
     def handle(message:T):Unit
 }
 
-class Function[T](fun:T=>Unit) extends Handler[T] {
-    def handle(message:T):Unit = {fun(message)}
+object Handler {
+    implicit def handler[T](fun:T=>Unit):Handler[T] =
+      new Handler[T]() { override def handle(message:T) = fun(message)}
 }
 
 class Event[T] {

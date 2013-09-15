@@ -23,10 +23,12 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.ssl.SslHandler;
 import javax.net.ssl.SSLEngine;
+
+import kernel.runtime._
 import kernel.runtime.System._
 
 object Server {
-    private class Handler extends ChannelInboundHandlerAdapter {
+    private class Handler(handlers:Event[Request]) extends ChannelInboundHandlerAdapter {
         override def channelReadComplete(ctx:ChannelHandlerContext) {
             ctx.flush();
         }
@@ -39,14 +41,7 @@ object Server {
                     ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
                 }
 
-                val request = new Request(ctx, req, Unpooled.buffer());
-                val response = request.response
-
-                response.write("Test Response")
-                response.headers.set(CONTENT_TYPE, "text/plain");
-                response.headers.set(CONTENT_LENGTH, response.buffer.readableBytes());
-
-                response.send()
+                handlers.send(new Request(ctx, req, Unpooled.buffer()))
             }
         }
 
@@ -56,7 +51,7 @@ object Server {
         }
     }
 
-    class Initializer extends ChannelInitializer[SocketChannel] {
+    class Initializer(http:Event[Request]) extends ChannelInitializer[SocketChannel] {
         override def initChannel(ch:SocketChannel) {
           val p = ch.pipeline()
             p.addLast("codec", new HttpServerCodec());
@@ -64,12 +59,14 @@ object Server {
             // p.addLast("aggregator", new HttpObjectAggregator(65536));
             // p.addLast("encoder", new HttpResponseEncoder());
             // p.addLast("socket", new WebSocketServerProtocolHandler("/websocket"));
-            p.addLast("handler", new Handler());
+            p.addLast("handler", new Handler(http));
         }
     }
 }
 
-class Server(port:Int) {
+class Server(val port:Int, val http:Event[Request]) {
+    def this(port:Int) = this(port,new Event[Request]())
+
     var future:io.netty.channel.ChannelFuture = null
     var channel:io.netty.channel.Channel = null
 
@@ -81,7 +78,7 @@ class Server(port:Int) {
             b.option(ChannelOption.SO_BACKLOG, new Integer(1024));
             b.group(bossGroup, workerGroup)
              .channel(classOf[NioServerSocketChannel])
-             .childHandler(new Server.Initializer())
+             .childHandler(new Server.Initializer(http))
 
             channel = b.bind(port).sync().channel()
             future = channel.closeFuture()

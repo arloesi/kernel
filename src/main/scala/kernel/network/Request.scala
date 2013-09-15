@@ -32,7 +32,9 @@ class Request(val context:ChannelHandlerContext, request:HttpRequest, buffer:io.
 }
 
 class Response(val context:ChannelHandlerContext, val buffer:ByteBuf, request:HttpRequest) {
+    var contentType = "text/html"
     val response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer)
+
     def headers = response.headers()
     def keepAlive = isKeepAlive(request)
 
@@ -45,11 +47,19 @@ class Response(val context:ChannelHandlerContext, val buffer:ByteBuf, request:Ht
     }
 
     def send() {
-      if (!keepAlive) {
+        headers.set(CONTENT_LENGTH, buffer.readableBytes())
+        headers.set(CONTENT_TYPE, contentType)
+
+        if (!keepAlive) {
             context.write(response).addListener(ChannelFutureListener.CLOSE)
         } else {
             response.headers.set(CONNECTION, Values.KEEP_ALIVE)
             context.write(response)
         }
+    }
+
+    def send(body:String) {
+        write(body)
+        send()
     }
 }

@@ -6,6 +6,8 @@ import org.junit.Assert._
 import java.net.URL
 import java.net.HttpURLConnection
 
+import org.apache.commons.io.IOUtils
+
 import kernel.network.Request
 import kernel.network.Server
 
@@ -26,9 +28,16 @@ class NetworkTest {
 
     @Test
     def httpGetTest() {
+        val body = "<div>Test Content</div>"
+
+        server.http.handlers.add(
+            (request:Request) => request.response.send(body))
+
         val req = request("GET")
+        val rsp = IOUtils.toString(req.getInputStream())
 
         assertTrue(req.getResponseCode() == 200)
+        assertEquals(rsp,body)
     }
 
     def request(method:String) = {
