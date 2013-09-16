@@ -2,7 +2,6 @@ package kernel.network.server
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.HttpHeaders.Names._
 import io.netty.handler.codec.http.HttpHeaders._
@@ -15,16 +14,13 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.socket.nio.NioServerSocketChannel
 
 import kernel.runtime._
 import kernel.runtime.System._
-import kernel.network.Connection
 
-class Frame(val connection:Connection, val frame:WebSocketFrame) {
-}
+import kernel.network._
 
 object Server {
     private class Handler(socket:String,request:Event[Request],frame:Event[Frame]) extends SimpleChannelInboundHandler[Object] {

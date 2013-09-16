@@ -33,66 +33,73 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.websocketx._
 import io.netty.util.CharsetUtil;
 import io.netty.handler.codec.http.HttpObjectAggregator
 
 import java.net.URI;
 import kernel.runtime._
+import kernel.network._
 
-class Handler(val response:Event[Response]) extends SimpleChannelInboundHandler[HttpObject] {
-    def this() = this(new Event[Response]())
+object Client {
+    implicit def socket(uri:URI):Client = new Client(uri)
+    implicit def socket(uri:String):Client = socket(new URI(uri))
 
-    var httpResponse:Response = _
+    class Handler(val response:Event[Response], val frame:Event[Frame]) extends SimpleChannelInboundHandler[Object] {
+        def this() = this(new Event[Response](), new Event[Frame]())
 
-    override def channelRead0(ctx:ChannelHandlerContext, msg:HttpObject):Unit = {
-        if (msg.isInstanceOf[HttpResponse]) {
-            httpResponse = new Response(msg.asInstanceOf[HttpResponse])
-        }
+        var httpResponse:Response = _
 
-        if (msg.isInstanceOf[HttpContent]) {
-            val content =  msg.asInstanceOf[HttpContent]
+        override def channelRead0(ctx:ChannelHandlerContext, msg:Object):Unit = {
+            if(msg.isInstanceOf[WebSocketFrame]) {
+                frame.send(new Frame(new Connection(ctx.channel()), msg.asInstanceOf[WebSocketFrame]))
+            }
+            else {
+                if (msg.isInstanceOf[HttpResponse]) {
+                    httpResponse = new Response(msg.asInstanceOf[HttpResponse])
+                }
 
-            print(content.content().toString(CharsetUtil.UTF_8));
+                if (msg.isInstanceOf[HttpContent]) {
+                    val content =  msg.asInstanceOf[HttpContent]
 
-            httpResponse.content.add(Unpooled.copiedBuffer(content.content()))
+                    print(content.content().toString(CharsetUtil.UTF_8));
 
-            if (content.isInstanceOf[LastHttpContent]) {
-                this.response.send(httpResponse)
+                    httpResponse.content.add(Unpooled.copiedBuffer(content.content()))
+
+                    if (content.isInstanceOf[LastHttpContent]) {
+                        this.response.send(httpResponse)
+                    }
+                }
             }
         }
+
+        override def exceptionCaught(
+            ctx:ChannelHandlerContext, cause:Throwable):Unit = {
+            cause.printStackTrace();
+            ctx.close();
+        }
     }
 
-    override def exceptionCaught(
-        ctx:ChannelHandlerContext, cause:Throwable):Unit = {
-        cause.printStackTrace();
-        ctx.close();
+    class Initializer(handler:Handler) extends ChannelInitializer[SocketChannel] {
+        override def initChannel(ch:SocketChannel) {
+            // Create a default pipeline implementation.
+            val p = ch.pipeline();
+
+            p.addLast("codec", new HttpClientCodec());
+            p.addLast("inflater", new HttpContentDecompressor());
+
+            // Uncomment the following line if you don't want to handle HttpChunks.
+            // p.addLast("aggregator", new HttpObjectAggregator(1048576));
+
+            p.addLast("handler", handler);
+        }
     }
 }
 
-class Initializer(handler:Handler) extends ChannelInitializer[SocketChannel] {
-    override def initChannel(ch:SocketChannel) {
-        // Create a default pipeline implementation.
-        val p = ch.pipeline();
-
-        p.addLast("codec", new HttpClientCodec());
-        p.addLast("inflater", new HttpContentDecompressor());
-
-        // Uncomment the following line if you don't want to handle HttpChunks.
-        // p.addLast("aggregator", new HttpObjectAggregator(1048576));
-
-        p.addLast("handler", handler);
-    }
-}
-
-object Socket {
-    implicit def socket(uri:URI):Socket = new Socket(uri)
-    implicit def socket(uri:String):Socket = socket(new URI(uri))
-}
-
-class Socket(val uri:URI) {
+class Client(val uri:URI) {
     var channel:Channel = _
     var group:NioEventLoopGroup = _
-    val handler = new Handler()
+    val handler = new Client.Handler()
     def response = handler.response
     def connected = channel != null
 
@@ -103,7 +110,7 @@ class Socket(val uri:URI) {
         val b = new Bootstrap();
         b.group(group)
          .channel(classOf[NioSocketChannel])
-         .handler(new Initializer(handler));
+         .handler(new Client.Initializer(handler));
 
         // Make the connection attempt.
         channel = b.connect(uri.getHost(), uri.getPort()).sync().channel();

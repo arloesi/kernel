@@ -39,31 +39,31 @@ import io.netty.handler.codec.http.HttpObjectAggregator
 import java.net.URI;
 import kernel.runtime._
 
-class Request(val socket:Socket) {
+class Request(val client:Client) {
     var response:Response = _
 
     val request = new DefaultHttpRequest(
-        HttpVersion.HTTP_1_1, HttpMethod.GET, socket.uri.getRawPath());
+        HttpVersion.HTTP_1_1, HttpMethod.GET, client.uri.getRawPath());
 
-    request.headers().set(HttpHeaders.Names.HOST, socket.uri.getHost());
+    request.headers().set(HttpHeaders.Names.HOST, client.uri.getHost());
     request.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
     request.headers().set(HttpHeaders.Names.ACCEPT_ENCODING, HttpHeaders.Values.GZIP);
 
-    socket.response.handlers.add((response:Response) => {
+    client.response.handlers.add((response:Response) => {
         this.response = response
     })
 
     def headers = request.headers()
 
     def send() {
-        if(!socket.connected) {
-            socket.connect()
+        if(!client.connected) {
+            client.connect()
         }
-        socket.channel.writeAndFlush(request)
+        client.channel.writeAndFlush(request)
     }
 
     def sendAndWait() = {
         send()
-        socket.channel.closeFuture().sync()
+        client.channel.closeFuture().sync()
     }
 }
