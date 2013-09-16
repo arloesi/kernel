@@ -16,31 +16,68 @@ import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.ChannelHandlerContext
-import kernel.runtime._
-import kernel.runtime.System._
+import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.socket.nio.NioServerSocketChannel
 
+import kernel.runtime._
+import kernel.runtime.System._
+
 object Server {
-    private class Handler(handlers:Event[Request]) extends ChannelInboundHandlerAdapter {
+    private class Handler(socket:String,handlers:Event[Request]) extends SimpleChannelInboundHandler[Object] {
+        var handshaker:WebSocketServerHandshaker = _
+
         override def channelReadComplete(ctx:ChannelHandlerContext) {
             ctx.flush();
         }
 
-        override def channelRead(ctx:ChannelHandlerContext, msg:Object) {
-            if (msg.isInstanceOf[HttpRequest]) {
+        override def channelRead0(ctx:ChannelHandlerContext, msg:Object) {
+            if(msg.isInstanceOf[WebSocketFrame]) {
+                val frame = msg.asInstanceOf[WebSocketFrame]
+
+                // Check for closing frame
+                if (frame.isInstanceOf[CloseWebSocketFrame]) {
+                    handshaker.close(ctx.channel(), frame.retain().asInstanceOf[CloseWebSocketFrame]);
+                }
+                else if (frame.isInstanceOf[PingWebSocketFrame]) {
+                    ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
+                }
+                else if (frame.isInstanceOf[TextWebSocketFrame]) {
+                    val request = frame.asInstanceOf[TextWebSocketFrame].text()
+                    ctx.channel().write(new TextWebSocketFrame(request.toUpperCase()));
+                }
+                else if (frame.isInstanceOf[BinaryWebSocketFrame]) {
+                    val request = frame.asInstanceOf[BinaryWebSocketFrame]
+                }
+            }
+            else if (msg.isInstanceOf[HttpRequest]) {
                 val req = msg.asInstanceOf[HttpRequest];
 
-                if (is100ContinueExpected(req)) {
-                    ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
-                }
+                if(req.getUri().equals(socket)) {
+                    if(req.isInstanceOf[FullHttpRequest]) {
+                        val request = req.asInstanceOf[FullHttpRequest]
+                        // Handshake
+                        val wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, false);
+                        handshaker = wsFactory.newHandshaker(request);
 
-                handlers.send(new Request(ctx, req, Unpooled.buffer()))
+                        if (handshaker == null) {
+                            WebSocketServerHandshakerFactory.sendUnsupportedWebSocketVersionResponse(ctx.channel());
+                        } else {
+                            handshaker.handshake(ctx.channel(), request);
+                        }
+                    }
+                }
+                else {
+                    if(is100ContinueExpected(req)) {
+                        ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
+                    }
+
+                    handlers.send(new Request(ctx, req, Unpooled.buffer()))
+                }
             }
         }
 
-        override def exceptionCaught(ctx:ChannelHandlerContext, cause:Throwable) {
-            cause.printStackTrace();
-            ctx.close();
+        def getWebSocketLocation(req:FullHttpRequest):String = {
+            return "ws://" + req.headers().get(HOST) + socket;
         }
     }
 
@@ -50,8 +87,7 @@ object Server {
                 new HttpRequestDecoder(),
                 new HttpObjectAggregator(65536),
                 new HttpResponseEncoder(),
-                // new WebSocketServerProtocolHandler("/websocket"),
-                new Handler(http))
+                new Handler("/socket",http))
         }
     }
 }

@@ -10,6 +10,9 @@ import kernel.runtime.Handler.handler
 import io.netty.util.CharsetUtil
 
 class ServerTest {
+    type ServerRequest = kernel.network.server.Request
+    type ClientRequest = kernel.network.client.Request
+
     var server:Server = _
 
     @Before
@@ -29,11 +32,11 @@ class ServerTest {
         val body = "<div>Test Content</div>"
 
         server.http.handlers.add(
-            (request:Request) => {
+            (request:ServerRequest) => {
               request.response.send(body)
             })
 
-        val req = new kernel.network.client.Request(new URI("http://localhost:8080"))
+        val req = new ClientRequest(new URI("http://localhost:8080"))
         req.sendAndWait()
 
         val ret = req.response.statusCode
