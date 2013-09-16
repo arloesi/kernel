@@ -31,7 +31,7 @@ class ServerTest {
     def httpGetTest() {
         val body = "<div>Test Content</div>"
 
-        server.http.handlers.add(
+        server.request.handlers.add(
             (request:ServerRequest) => {
               request.response.send(body)
             })

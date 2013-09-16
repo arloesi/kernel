@@ -13,13 +13,15 @@ import io.netty.handler.codec.http.websocketx._
 import io.netty.channel.ChannelHandlerContext
 import io.netty.buffer.ByteBuf
 
-class Request(val context:ChannelHandlerContext, request:HttpRequest, buffer:io.netty.buffer.ByteBuf) {
-    val response = new Response(context, buffer, request)
+import kernel.network.Connection
+
+class Request(val connection:Connection, request:HttpRequest, buffer:io.netty.buffer.ByteBuf) {
+    val response = new Response(connection, buffer, request)
     def headers = request.headers()
     def method = request.getMethod()
 }
 
-class Response(val context:ChannelHandlerContext, val buffer:ByteBuf, request:HttpRequest) {
+class Response(val connection:Connection, val buffer:ByteBuf, request:HttpRequest) {
     var contentType = "text/html"
     val response = new DefaultFullHttpResponse(HTTP_1_1, OK, buffer)
 
@@ -39,10 +41,10 @@ class Response(val context:ChannelHandlerContext, val buffer:ByteBuf, request:Ht
         headers.set(CONTENT_TYPE, contentType)
 
         if (!keepAlive) {
-            context.write(response).addListener(ChannelFutureListener.CLOSE)
+            connection.channel.write(response).addListener(ChannelFutureListener.CLOSE)
         } else {
             response.headers.set(CONNECTION, Values.KEEP_ALIVE)
-            context.write(response)
+            connection.channel.write(response)
         }
     }
 

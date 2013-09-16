@@ -21,9 +21,13 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 
 import kernel.runtime._
 import kernel.runtime.System._
+import kernel.network.Connection
+
+class Frame(val connection:Connection, val frame:WebSocketFrame) {
+}
 
 object Server {
-    private class Handler(socket:String,handlers:Event[Request]) extends SimpleChannelInboundHandler[Object] {
+    private class Handler(socket:String,request:Event[Request],frame:Event[Frame]) extends SimpleChannelInboundHandler[Object] {
         var handshaker:WebSocketServerHandshaker = _
 
         override def channelReadComplete(ctx:ChannelHandlerContext) {
@@ -41,12 +45,8 @@ object Server {
                 else if (frame.isInstanceOf[PingWebSocketFrame]) {
                     ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
                 }
-                else if (frame.isInstanceOf[TextWebSocketFrame]) {
-                    val request = frame.asInstanceOf[TextWebSocketFrame].text()
-                    ctx.channel().write(new TextWebSocketFrame(request.toUpperCase()));
-                }
-                else if (frame.isInstanceOf[BinaryWebSocketFrame]) {
-                    val request = frame.asInstanceOf[BinaryWebSocketFrame]
+                else {
+                    this.frame.send(new Frame(new Connection(ctx.channel()), frame))
                 }
             }
             else if (msg.isInstanceOf[HttpRequest]) {
@@ -70,7 +70,7 @@ object Server {
                         ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
                     }
 
-                    handlers.send(new Request(ctx, req, Unpooled.buffer()))
+                    this.request.send(new Request(new Connection(ctx.channel()), req, Unpooled.buffer()))
                 }
             }
         }
@@ -80,19 +80,19 @@ object Server {
         }
     }
 
-    class Initializer(http:Event[Request]) extends ChannelInitializer[SocketChannel] {
+    class Initializer(request:Event[Request],frame:Event[Frame]) extends ChannelInitializer[SocketChannel] {
         override def initChannel(ch:SocketChannel) {
             ch.pipeline().addLast(
                 new HttpRequestDecoder(),
                 new HttpObjectAggregator(65536),
                 new HttpResponseEncoder(),
-                new Handler("/socket",http))
+                new Handler("/socket",request,frame))
         }
     }
 }
 
-class Server(val port:Int, val http:Event[Request]) {
-    def this(port:Int) = this(port,new Event[Request]())
+class Server(val port:Int, val request:Event[Request], val frame:Event[Frame]) {
+    def this(port:Int) = this(port,new Event[Request](), new Event[Frame]())
 
     var future:io.netty.channel.ChannelFuture = null
     var channel:io.netty.channel.Channel = null
@@ -105,7 +105,7 @@ class Server(val port:Int, val http:Event[Request]) {
             b.option(ChannelOption.SO_BACKLOG, new Integer(1024));
             b.group(bossGroup, workerGroup)
              .channel(classOf[NioServerSocketChannel])
-             .childHandler(new Server.Initializer(http))
+             .childHandler(new Server.Initializer(request,frame))
 
             channel = b.bind(port).sync().channel()
             future = channel.closeFuture()
