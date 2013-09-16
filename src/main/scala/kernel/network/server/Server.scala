@@ -34,7 +34,6 @@ object Server {
             if(msg.isInstanceOf[WebSocketFrame]) {
                 val frame = msg.asInstanceOf[WebSocketFrame]
 
-                // Check for closing frame
                 if (frame.isInstanceOf[CloseWebSocketFrame]) {
                     handshaker.close(ctx.channel(), frame.retain().asInstanceOf[CloseWebSocketFrame]);
                 }

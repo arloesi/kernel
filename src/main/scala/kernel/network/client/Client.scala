@@ -17,8 +17,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
 
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
+import io.netty.channel._;
 import io.netty.channel.socket.SocketChannel;
 // import io.netty.example.securechat.SecureChatSslContextFactory;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -28,11 +27,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpObject;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http._;
 import io.netty.handler.codec.http.websocketx._
 import io.netty.util.CharsetUtil;
 import io.netty.handler.codec.http.HttpObjectAggregator
@@ -42,70 +37,28 @@ import kernel.runtime._
 import kernel.network._
 
 object Client {
-    implicit def socket(uri:URI):Client = new Client(uri)
-    implicit def socket(uri:String):Client = socket(new URI(uri))
-
-    class Handler(val response:Event[Response], val frame:Event[Frame]) extends SimpleChannelInboundHandler[Object] {
-        def this() = this(new Event[Response](), new Event[Frame]())
-
-        var httpResponse:Response = _
-
-        override def channelRead0(ctx:ChannelHandlerContext, msg:Object):Unit = {
-            if(msg.isInstanceOf[WebSocketFrame]) {
-                frame.send(new Frame(new Connection(ctx.channel()), msg.asInstanceOf[WebSocketFrame]))
-            }
-            else {
-                if (msg.isInstanceOf[HttpResponse]) {
-                    httpResponse = new Response(msg.asInstanceOf[HttpResponse])
-                }
-
-                if (msg.isInstanceOf[HttpContent]) {
-                    val content =  msg.asInstanceOf[HttpContent]
-
-                    print(content.content().toString(CharsetUtil.UTF_8));
-
-                    httpResponse.content.add(Unpooled.copiedBuffer(content.content()))
-
-                    if (content.isInstanceOf[LastHttpContent]) {
-                        this.response.send(httpResponse)
-                    }
-                }
-            }
-        }
-
-        override def exceptionCaught(
-            ctx:ChannelHandlerContext, cause:Throwable):Unit = {
-            cause.printStackTrace();
-            ctx.close();
-        }
-    }
-
-    class Initializer(handler:Handler) extends ChannelInitializer[SocketChannel] {
+    class Initializer(handler:ChannelInboundHandlerAdapter) extends ChannelInitializer[SocketChannel] {
         override def initChannel(ch:SocketChannel) {
             // Create a default pipeline implementation.
             val p = ch.pipeline();
 
             p.addLast("codec", new HttpClientCodec());
             p.addLast("inflater", new HttpContentDecompressor());
-
-            // Uncomment the following line if you don't want to handle HttpChunks.
-            // p.addLast("aggregator", new HttpObjectAggregator(1048576));
-
+            p.addLast("aggregator", new HttpObjectAggregator(8192));
             p.addLast("handler", handler);
         }
     }
 }
 
-class Client(val uri:URI) {
+class Client(val uri:URI, val handler:ChannelInboundHandlerAdapter) {
     var channel:Channel = _
     var group:NioEventLoopGroup = _
-    val handler = new Client.Handler()
-    def response = handler.response
     def connected = channel != null
 
     def connect() {
         // Configure the client.
-        group = new NioEventLoopGroup();
+        val group = new NioEventLoopGroup();
+        this.group = group
 
         val b = new Bootstrap();
         b.group(group)
@@ -114,15 +67,23 @@ class Client(val uri:URI) {
 
         // Make the connection attempt.
         channel = b.connect(uri.getHost(), uri.getPort()).sync().channel();
+
+        channel.closeFuture().addListener(new ChannelFutureListener() {
+            override def operationComplete(future:ChannelFuture) {
+                group.shutdownGracefully()
+            }
+        })
     }
 
-    def close() {
+    def close() = {
         if(channel != null) {
-            channel.close()
-            channel.closeFuture().sync()
-            group.shutdownGracefully()
+            val ret = channel.close()
             channel = null
             group = null
+            ret
+        }
+        else {
+          null
         }
     }
 }
