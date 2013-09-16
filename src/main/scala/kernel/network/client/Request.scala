@@ -49,19 +49,16 @@ class Request(val socket:Socket) {
     request.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
     request.headers().set(HttpHeaders.Names.ACCEPT_ENCODING, HttpHeaders.Values.GZIP);
 
-    request.headers().set(
-        HttpHeaders.Names.COOKIE,
-        ClientCookieEncoder.encode(
-            new DefaultCookie("session", "foo")));
-
-    socket.complete.handlers.add((response:Response) => {
+    socket.response.handlers.add((response:Response) => {
         this.response = response
     })
 
     def headers = request.headers()
 
     def send() {
-        socket.connect()
+        if(!socket.connected) {
+            socket.connect()
+        }
         socket.channel.writeAndFlush(request)
     }
 
@@ -69,10 +66,4 @@ class Request(val socket:Socket) {
         send()
         socket.channel.closeFuture().sync()
     }
-}
-
-class Response(val response:HttpResponse) {
-    val content = new LinkedList[ByteBuf]();
-    lazy val buffer = Unpooled.copiedBuffer(content.foldLeft(Unpooled.buffer())((buffer,content) => buffer.writeBytes(content)))
-    def statusCode = response.getStatus().code()
 }

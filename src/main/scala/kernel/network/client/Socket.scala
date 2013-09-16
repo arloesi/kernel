@@ -39,36 +39,14 @@ import io.netty.handler.codec.http.HttpObjectAggregator
 import java.net.URI;
 import kernel.runtime._
 
-class Handler(val response:Event[Response],val content:Event[Response],val complete:Event[Response])
-    extends SimpleChannelInboundHandler[HttpObject] {
+class Handler(val response:Event[Response]) extends SimpleChannelInboundHandler[HttpObject] {
+    def this() = this(new Event[Response]())
 
-    def this() = this(new Event[Response](),new Event[Response](), new Event[Response]())
     var httpResponse:Response = _
 
     override def channelRead0(ctx:ChannelHandlerContext, msg:HttpObject):Unit = {
         if (msg.isInstanceOf[HttpResponse]) {
-            val response = msg.asInstanceOf[HttpResponse];
-
-            print("STATUS: " + response.getStatus());
-            print("VERSION: " + response.getProtocolVersion());
-            print();
-
-            if (!response.headers().isEmpty()) {
-                for (name <- response.headers().names()) {
-                    for (value <- response.headers().getAll(name)) {
-                        print("HEADER: " + name + " = " + value);
-                    }
-                }
-                print();
-            }
-
-            if (HttpHeaders.isTransferEncodingChunked(response)) {
-                print("CHUNKED CONTENT {");
-            } else {
-                print("CONTENT {");
-            }
-
-            httpResponse = new Response(response)
+            httpResponse = new Response(msg.asInstanceOf[HttpResponse])
         }
 
         if (msg.isInstanceOf[HttpContent]) {
@@ -77,11 +55,9 @@ class Handler(val response:Event[Response],val content:Event[Response],val compl
             print(content.content().toString(CharsetUtil.UTF_8));
 
             httpResponse.content.add(Unpooled.copiedBuffer(content.content()))
-            this.content.send(httpResponse)
 
             if (content.isInstanceOf[LastHttpContent]) {
-                print("} END OF CONTENT");
-                this.complete.send(httpResponse)
+                this.response.send(httpResponse)
             }
         }
     }
@@ -117,7 +93,8 @@ class Socket(val uri:URI) {
     var channel:Channel = _
     var group:NioEventLoopGroup = _
     val handler = new Handler()
-    def complete = handler.complete
+    def response = handler.response
+    def connected = channel != null
 
     def connect() {
         // Configure the client.
