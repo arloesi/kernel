@@ -55,7 +55,6 @@ object Server {
                 if(req.getUri().equals(socket)) {
                     if(req.isInstanceOf[FullHttpRequest]) {
                         val request = req.asInstanceOf[FullHttpRequest]
-                        // Handshake
                         val wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, false);
                         handshaker = wsFactory.newHandshaker(request);
 

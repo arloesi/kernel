@@ -1,40 +1,15 @@
 
-allprojects {
-    apply plugin: "eclipse"
-
-    ext {
-      scalaVersion = "2.10.1"
-      testVersion = "2.0.M6-SNAP26"
-      groovyVersion = "2.1.2"
-      junitVersion = "4.11"
-    }
-
-    task projects(dependsOn:["cleanEclipse","eclipseProject","eclipseClasspath"]) << {
-    }
-
-    eclipse {
-        classpath {
-           downloadSources=true
-           downloadJavadoc=true
-        }
-    }
-
-    repositories {
-      mavenCentral()
-
-      maven {
-        url "http://download.eclipse.org/rt/eclipselink/maven.repo"
-      }
-    }
-  }
-
-
 defaultTasks "installApp"
 
 apply plugin: "scala"
+apply plugin: "eclipse"
 apply plugin: "application"
 
 ext {
+  scalaVersion = "2.10.1"
+  testVersion = "2.0.M6-SNAP26"
+  groovyVersion = "2.1.2"
+  junitVersion = "4.11"
   collectionsVersion = "20040616"
   dbcpVersion = "20030825.184428"
   poolVersion = "20030825.183949"
@@ -88,17 +63,18 @@ dependencies {
   compile group:"com.hazelcast",name:"hazelcast",version:ext.hazelcastVersion
   compile group:"org.apache.camel",name:"camel",version:ext.camelVersion
   compile group:"org.apache.camel",name:"camel-scala",version:ext.camelVersion
+  compile group:"org.apache.camel",name:"camel-hazelcast",version:ext.camelVersion
 
   compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
   compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
 }
 
 sourceSets {
-    main {
-        scala {
-            srcDirs = ["src/main/scala"]
-        }
+  main {
+    scala {
+      srcDirs = ["src/main/scala"]
     }
+  }
 
   test {
     scala {
@@ -119,4 +95,7 @@ eclipse {
 }
 
 applicationDistribution.from("$projectDir/config") {
+}
+
+task projects(dependsOn:["cleanEclipse","eclipseProject","eclipseClasspath"]) << {
 }
