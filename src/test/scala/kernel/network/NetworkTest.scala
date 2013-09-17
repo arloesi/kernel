@@ -1,18 +1,14 @@
-package kernel.network.server
-
-import java.net.URI
+package kernel.network
 import org.junit._
 import org.junit.Assert._
-import java.net.URL
-import java.net.HttpURLConnection
-import org.apache.commons.io.IOUtils
 import io.netty.util.CharsetUtil
-
 import kernel.network._
 import kernel.network.Common._
 import kernel.network.client.Socket
+import kernel.network.server.Server
+import kernel.runtime.Handler.handler
 
-class ServerTest {
+class NetworkTest {
     type ServerRequest = kernel.network.server.Request
     type ClientRequest = kernel.network.client.Request
 
@@ -44,7 +40,7 @@ class ServerTest {
         val rsp = req.response.buffer.toString(CharsetUtil.UTF_8)
 
         assertTrue(ret == 200)
-        assertEquals(rsp,body)
+        assertEquals(rsp, body)
     }
 
     @Test

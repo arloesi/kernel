@@ -23,7 +23,8 @@ class Socket(handler:Socket.Handler,client:Client) {
     }
 
     def close() = {
-        client.close()
+        send(new CloseWebSocketFrame())
+        client.channel.closeFuture().sync()
     }
 
     def send(msg:WebSocketFrame):ChannelFuture = {
@@ -44,19 +45,17 @@ class Socket(handler:Socket.Handler,client:Client) {
 }
 
 object Socket {
-    class Handler(
-        val handshaker:WebSocketClientHandshaker,
-        val response:Event[Response], val frame:Event[Frame])
-
+    class Handler(val handshaker:WebSocketClientHandshaker, val response:Event[Response], val frame:Event[Frame])
         extends SimpleChannelInboundHandler[Object] {
 
-        def this(handshaker:WebSocketClientHandshaker) = this(handshaker,new Event[Response](), new Event[Frame]())
+        def this(handshaker:WebSocketClientHandshaker) =
+            this(handshaker,new Event[Response](), new Event[Frame]())
 
         var handshakePromise:ChannelPromise = _
 
         override def channelRead0(ctx:ChannelHandlerContext, msg:Object):Unit = {
             if(msg.isInstanceOf[FullHttpResponse]) {
-                if (!handshaker.isHandshakeComplete()) {
+                if(!handshaker.isHandshakeComplete()) {
                     handshaker.finishHandshake(ctx.channel(), msg.asInstanceOf[FullHttpResponse]);
                     handshakePromise.setSuccess();
                 }
