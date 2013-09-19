@@ -25,7 +25,6 @@ class Server(val port:Int, val handler:Handler, bossGroup:NioEventLoopGroup, wor
     def request = handler.request
     def frame = handler.frame
 
-    var future:io.netty.channel.ChannelFuture = null
     var channel:io.netty.channel.Channel = null
 
     def start() {
@@ -44,9 +43,7 @@ class Server(val port:Int, val handler:Handler, bossGroup:NioEventLoopGroup, wor
             })
 
         channel = b.bind(port).sync().channel()
-        future = channel.closeFuture()
-
-        future.addListener(
+        channel.closeFuture().addListener(
             new ChannelFutureListener() {
                 override def operationComplete(future:ChannelFuture) {
                     bossGroup.shutdownGracefully()
@@ -56,7 +53,9 @@ class Server(val port:Int, val handler:Handler, bossGroup:NioEventLoopGroup, wor
     }
 
     def stop() {
-        channel.close()
-        future.sync()
+        if(channel != null) {
+            channel.close()
+            channel.closeFuture().sync()
+        }
     }
 }

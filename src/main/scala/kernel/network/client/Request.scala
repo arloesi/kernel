@@ -39,6 +39,7 @@ class Request(val handler:Request.Handler,val client:Client) {
         if(!client.connected) {
             client.connect()
         }
+
         client.channel.writeAndFlush(request)
         client.channel.closeFuture()
     }

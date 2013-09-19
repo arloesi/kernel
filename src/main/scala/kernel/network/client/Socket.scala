@@ -24,7 +24,7 @@ class Socket(handler:Socket.Handler,client:Client) {
 
     def close() = {
         send(new CloseWebSocketFrame())
-        client.channel.closeFuture().sync()
+        client.channel.closeFuture()
     }
 
     def send(msg:WebSocketFrame):ChannelFuture = {
@@ -45,7 +45,8 @@ class Socket(handler:Socket.Handler,client:Client) {
 }
 
 object Socket {
-    class Handler(val handshaker:WebSocketClientHandshaker, val response:Event[Response], val frame:Event[Frame])
+    class Handler(
+        val handshaker:WebSocketClientHandshaker, val response:Event[Response], val frame:Event[Frame])
         extends SimpleChannelInboundHandler[Object] {
 
         def this(handshaker:WebSocketClientHandshaker) =
@@ -56,8 +57,8 @@ object Socket {
         override def channelRead0(ctx:ChannelHandlerContext, msg:Object):Unit = {
             if(msg.isInstanceOf[FullHttpResponse]) {
                 if(!handshaker.isHandshakeComplete()) {
-                    handshaker.finishHandshake(ctx.channel(), msg.asInstanceOf[FullHttpResponse]);
-                    handshakePromise.setSuccess();
+                    handshaker.finishHandshake(ctx.channel(), msg.asInstanceOf[FullHttpResponse])
+                    handshakePromise.setSuccess()
                 }
             }
             else if(msg.isInstanceOf[WebSocketFrame]) {
@@ -67,16 +68,16 @@ object Socket {
 
         override def exceptionCaught(
             ctx:ChannelHandlerContext, cause:Throwable):Unit = {
-            cause.printStackTrace();
-            ctx.close();
+            cause.printStackTrace()
+            ctx.close()
         }
 
         override def handlerAdded(ctx:ChannelHandlerContext) {
-            handshakePromise = ctx.newPromise();
+            handshakePromise = ctx.newPromise()
         }
 
         override def channelActive(ctx:ChannelHandlerContext) {
-            handshaker.handshake(ctx.channel());
+            handshaker.handshake(ctx.channel())
         }
 
         override def channelInactive(ctx:ChannelHandlerContext) {
