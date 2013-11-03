@@ -23,6 +23,7 @@ import kernel.network._
 class Request(val handler:Request.Handler,val client:Client) {
     def this(uri:URI,handler:Request.Handler) = this(handler,new Client(uri,handler))
     def this(uri:URI) = this(uri,new Request.Handler())
+    def this(uri:URI, respond:Response=>Unit) = this(null)
 
     def response = handler.httpResponse
 

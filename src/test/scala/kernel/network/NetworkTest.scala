@@ -1,7 +1,13 @@
 package kernel.network
+
 import org.junit._
 import org.junit.Assert._
+
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+
 import io.netty.util.CharsetUtil
+
 import kernel.network._
 import kernel.network.Common._
 import kernel.network.client.Socket
@@ -11,6 +17,7 @@ import kernel.runtime.Handler.handler
 class NetworkTest {
     type ServerRequest = kernel.network.server.Request
     type ClientRequest = kernel.network.client.Request
+    type ClientResponse= kernel.network.client.Response
 
     var server:Server = _
 
@@ -27,20 +34,32 @@ class NetworkTest {
     }
 
     @Test
-    def httpGetTest() {
+    def requestTest() {
         val body = "<div>Test Content</div>"
 
-        server.request.handlers.add(
-            (request:ServerRequest) => request.response.send(body))
+        val responder = spy(new {
+            def respond(request:ServerRequest) {
+                request.response.send(body)
+            }
+        })
 
-        val req = new ClientRequest("http://localhost:8080")
-        req.send().sync()
+        server.request.handlers.add(responder.respond _)
 
-        val ret = req.response.statusCode
-        val rsp = req.response.buffer.toString(CharsetUtil.UTF_8)
+        val receiver = spy(new {
+            def receive(response:ClientResponse) {
+                val responseCode = response.statusCode
+                val responseBody = response.buffer.toString(CharsetUtil.UTF_8)
 
-        assertTrue(ret == 200)
-        assertEquals(rsp, body)
+                assertEquals(responseCode, 200)
+                assertEquals(responseBody, body)
+            }
+        })
+
+        val request = new ClientRequest("http://localhost:8080", receiver.receive _)
+        request.send().sync()
+
+        verify(responder).respond(any(classOf[ServerRequest]))
+        verify(receiver).receive(any(classOf[ClientResponse]))
     }
 
     @Test
