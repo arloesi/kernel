@@ -60,7 +60,6 @@ dependencies {
   compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version:ext.jacksonVersion
 
   compile group:"io.vertx",name:"vertx-core",version:ext.vertxVersion
-  compile group:"io.vertx",name:"vertx-platform",version:ext.vertxVersion
 
   compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
   compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
