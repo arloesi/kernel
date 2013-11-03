@@ -7,6 +7,4 @@ import java.lang.annotation.*;
 public @interface Remote {
   public String name() default "";
   public String perm() default "";
-  public boolean async() default false;
-  public String method() default "POST";
 }
