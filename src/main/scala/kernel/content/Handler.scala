@@ -1,5 +1,6 @@
 package kernel.content
 
+import java.io._
 import java.util._
 import scala.collection.JavaConversions._
 
@@ -7,17 +8,19 @@ import javax.persistence._
 import org.eclipse.persistence.config._
 import org.eclipse.persistence.internal.jpa.EntityManagerImpl
 
-import kernel.runtime._
-import kernel.runtime.string._
+import org.vertx.java.core.http._
+import org.vertx.java.core.buffer._
 
-class Handler(schema:Schema,mapper:Mapper) extends kernel.runtime.Handler {
+import kernel.runtime._
+
+class Handler(schema:Schema,mapper:Mapper) {
   lazy val script = "this.content = {schema:"+mapper.getJsonSchema()+"};\n"
 
-  override def respond(request:Request) {
-    request.response.headers.put("Content-Type", "application/json")
+  def respond(request:HttpServerRequest) {
+    request.response.headers.add("Content-Type", "application/json")
 
     if(request.params.get("schema") != null) {
-      request.response.headers.put("Content-Type", "text/javascript")
+      request.response.headers.add("Content-Type", "text/javascript")
       request.response.end(script)
     } else {
       val session = schema.openSession()
@@ -38,7 +41,7 @@ class Handler(schema:Schema,mapper:Mapper) extends kernel.runtime.Handler {
     }
   }
 
-  def select(request:Request,session:EntityManager,view:mapper.View,mapping:Class[_],id:String) {
+  def select(request:HttpServerRequest,session:EntityManager,view:mapper.View,mapping:Class[_],id:String) {
     val query = session.createQuery(
       if(id != null) "from "+mapping.getSimpleName()+" where id="+id
       else "select i from "+mapping.getSimpleName()+" i")
@@ -50,15 +53,17 @@ class Handler(schema:Schema,mapper:Mapper) extends kernel.runtime.Handler {
     request.response.end(json)
   }
 
-  def update[T<:Object](request:Request,session:EntityManagerImpl,view:mapper.View,mapping:Class[T]) {
-    request.bodyHandler(buffer => {
-      val entity = mapper.unmarshalAndMerge(buffer.toString(), mapping, view)
-      val json = mapper.marshal(entity, view)
-      request.response.end(json)
+  def update[T<:Object](request:HttpServerRequest,session:EntityManagerImpl,view:mapper.View,mapping:Class[T]) {
+    request.bodyHandler(new org.vertx.java.core.Handler[Buffer]() {
+        override def handle(buffer:Buffer) {
+          val entity = mapper.unmarshalAndMerge(new StringReader(buffer.toString()), mapping, view)
+          val json = mapper.marshal(entity, view)
+          request.response.end(json)
+        }
     })
   }
 
-  def destroy(request:Request,session:EntityManager,mapping:Class[_],id:String) {
+  def destroy(request:HttpServerRequest,session:EntityManager,mapping:Class[_],id:String) {
     session.getTransaction().begin()
     session.createQuery("delete from "+mapping.getSimpleName()+" where id="+id).executeUpdate()
     session.getTransaction().commit()

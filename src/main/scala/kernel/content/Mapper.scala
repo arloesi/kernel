@@ -13,6 +13,8 @@ import javax.xml.bind.annotation._
 import javax.xml.transform.stream._
 import javax.persistence._
 
+import com.google.common.collect.Sets._
+
 import org.codehaus.jettison._
 import org.codehaus.jettison.mapped._
 
@@ -63,8 +65,8 @@ object Mapper {
 
 class Mapper(val schema:Schema, val context:JAXBContext, persisterGraph:Map[String,Mapping[FetchGroup]], marshallerGraph:Map[String,Mapping[Mapping.MarshallGraph]]) {
   def this(schema:Schema,context:JAXBContext,views:List[Class[_]]) = this(schema,context,
-    Mapper.createGraph(new Mapping.Persistence(),schema, schema.factory.getDatabaseSession(), collection.set(views)),
-    Mapper.createGraph(new Mapping.Marshalling(context), schema, JAXBHelper.getJAXBContext(context).getXMLContext().getSession(schema.classes.head),collection.set(views)))
+    Mapper.createGraph(new Mapping.Persistence(),schema, schema.factory.getDatabaseSession(), newLinkedHashSet(views)),
+    Mapper.createGraph(new Mapping.Marshalling(context), schema, JAXBHelper.getJAXBContext(context).getXMLContext().getSession(schema.classes.head),newLinkedHashSet(views)))
 
   def this(schema:Schema,views:List[Class[_]],properties:Map[String,String]) =
     this(schema,JAXBContext.newInstance(schema.classes,properties),views)
@@ -116,13 +118,13 @@ class Mapper(val schema:Schema, val context:JAXBContext, persisterGraph:Map[Stri
     }
 
     value match {
-      case list:List[Object] => {
+      case list:List[_] => {
         val iter = list.iterator()
         json.append("[")
 
         while(iter.hasNext()) {
           val i = iter.next()
-          json.append(impl(i))
+          json.append(impl(i.asInstanceOf[Object]))
 
           if(iter.hasNext()) {
             json.append(",")
@@ -168,8 +170,8 @@ class Mapper(val schema:Schema, val context:JAXBContext, persisterGraph:Map[Stri
           group.getGroup(m.getAttributeName()) match {
             case group:FetchGroup => {
               m.getAttributeValueFromObject(value) match {
-                case collection:Collection[Object] => {
-                  collection.foreach(x => visit(x,group))
+                case collection:Collection[_] => {
+                  collection.foreach(x => visit(x.asInstanceOf[Object],group))
                 }
                 case entity:Object => {
                   visit(entity,group)
@@ -203,11 +205,11 @@ class Mapper(val schema:Schema, val context:JAXBContext, persisterGraph:Map[Stri
     }
 
     value match {
-      case list:List[T] => {
+      case list:List[_] => {
         val result = new LinkedList[T]()
 
         for(i <- list) {
-          result.add(merge(i))
+          result.add(merge(i.asInstanceOf[T]))
         }
 
         result

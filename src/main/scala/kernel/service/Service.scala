@@ -23,9 +23,7 @@ class Service(val service:Object) {
         }
 
         methods.put(name, new Method(
-            name,service,i,
-            remote.method().toLowerCase(),
-            remote.perm()))
+            name,service,i,remote.perm()))
       }
     }
   }
