@@ -31,6 +31,7 @@ ext {
   hazelcastVersion = "3.0.2"
   nettyVersion = "4.0.9.Final"
   camelVersion = "2.12.0"
+  guiceVersion = "4.0-beta"
 }
 
 repositories {
@@ -48,6 +49,9 @@ dependencies {
   testCompile group:"junit",name:"junit",version:ext.junitVersion
   testCompile group:"org.scalatest",name:"scalatest_2.10",version:ext.testVersion
   testCompile group:"org.mockito",name:"mockito-all",version:ext.mockitoVersion
+
+  compile group:"com.google.inject",name:"guice",version:ext.guiceVersion
+  compile group:"com.google.inject.extensions",name:"guice-assistedinject",version:ext.guiceVersion
 
   compile group:"org.apache.commons", name:"commons-lang3", version:ext.langVersion
   compile group:"org.apache.commons", name:"commons-io", version:ext.ioVersion
