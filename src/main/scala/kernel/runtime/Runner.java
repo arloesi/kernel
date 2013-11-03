@@ -3,12 +3,17 @@ package kernel.runtime;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import kernel.network.Server;
+import org.vertx.java.core.*;
+import org.vertx.java.core.http.*;
 
 public class Runner {
-    private final Server server;
+    private final Vertx vertx;
+    private final int port;
+    private final HttpServer server;
 
-    public Runner(Server server) {
+    public Runner(Vertx vertx, int port, HttpServer server) {
+        this.vertx = vertx;
+        this.port = port;
         this.server = server;
     }
 
@@ -19,18 +24,18 @@ public class Runner {
             }
         });
 
-        server.start();
+        server.listen(port);
 
         synchronized(this) {
             this.wait();
         }
 
-        server.stop();
+        vertx.stop();
     }
 
     public static void main(String [] args) throws Exception {
-        final Module module = new Module(8080);
+        final Module module = new Module(8080, "dist");
         final Injector injector = Guice.createInjector(module);
-        new Runner(injector.getInstance(Server.class)).run();
+        injector.getInstance(Runner.class).run();
     }
 }

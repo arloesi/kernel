@@ -4,11 +4,12 @@ import com.google.inject._
 
 import org.vertx.java.core._
 import org.vertx.java.core.http._
+import org.vertx.java.core.json._
 import org.vertx.java.core.VertxFactory.newVertx
 
 import kernel.network._
 
-class Module(port:Int) extends AbstractModule {
+class Module(port:Int, assets:String) extends AbstractModule {
     override def configure() {
     }
 
@@ -18,12 +19,22 @@ class Module(port:Int) extends AbstractModule {
     }
 
     @Provides @Singleton
-    def provideHttpServer(node:Vertx):HttpServer = {
-        node.createHttpServer()
+    def provideRequestHandler:Request.Handler = {
+        new Request.Handler(assets)
     }
 
     @Provides @Singleton
-    def provideServer(node:Vertx, http:HttpServer):Server = {
-        new Server(node, http, port, "dist")
+    def provideHttpServer(node:Vertx, handler:Request.Handler, socket:Socket.Handler):HttpServer = {
+        val http = node.createHttpServer().requestHandler(handler)
+
+        node.createSockJSServer(http).installApp(
+            new JsonObject().putString("prefix", "/socket"), socket)
+
+        http
+    }
+
+    @Provides @Singleton
+    def provideRunner(vertx:Vertx, server:HttpServer):Runner = {
+        new Runner(vertx, port, server)
     }
 }
