@@ -61,9 +61,6 @@ dependencies {
 
   compile group:"io.netty",name:"netty-all",version:ext.nettyVersion
   compile group:"com.hazelcast",name:"hazelcast",version:ext.hazelcastVersion
-  compile group:"org.apache.camel",name:"camel",version:ext.camelVersion
-  compile group:"org.apache.camel",name:"camel-scala",version:ext.camelVersion
-  compile group:"org.apache.camel",name:"camel-hazelcast",version:ext.camelVersion
 
   compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
   compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
