@@ -1,5 +1,8 @@
 package kernel.runtime;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import kernel.network.Server;
 
 public class Runner {
@@ -26,6 +29,8 @@ public class Runner {
     }
 
     public static void main(String [] args) throws Exception {
-        new Runner(new Server(8080)).run();
+        final Module module = new Module(8080);
+        final Injector injector = Guice.createInjector(module);
+        new Runner(injector.getInstance(Server.class)).run();
     }
 }

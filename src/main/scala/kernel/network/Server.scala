@@ -1,18 +1,17 @@
 package kernel.network
 
+import org.vertx.java.core._
 import org.vertx.java.core.json._
 import org.vertx.java.core.http._
 import org.vertx.java.core.sockjs._
 import org.vertx.java.core.VertxFactory.newVertx
 
-class Server(val port:Int) {
-    val node = newVertx()
-    val http = node.createHttpServer()
-
+class Server(val node:Vertx, val http:HttpServer, val port:Int, val prefix:String) {
     http.requestHandler(
         new org.vertx.java.core.Handler[HttpServerRequest] {
             override def handle(request:HttpServerRequest) {
-                request.response.end("hello!")
+                println("http: "+request.path())
+                request.response.sendFile(prefix+"/"+request.path())
             }
         })
 
