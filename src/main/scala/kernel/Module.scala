@@ -1,4 +1,4 @@
-package kernel.runtime
+package kernel
 
 import com.google.inject._
 
@@ -34,7 +34,7 @@ class Module(port:Int, assets:String) extends AbstractModule {
     }
 
     @Provides @Singleton
-    def provideRunner(vertx:Vertx, server:HttpServer):Runner = {
-        new Runner(vertx, port, server)
+    def provideServer(vertx:Vertx, server:HttpServer):Server = {
+        new Server(vertx, port, server)
     }
 }
