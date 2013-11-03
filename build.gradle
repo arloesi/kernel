@@ -18,7 +18,7 @@ ext {
   derbyVersion = "10.9.1.0"
   cglibVersion = "2.2.2"
   springVersion = "3.2.2.RELEASE"
-  vertxVersion = "1.3.1.final"
+  vertxVersion = "2.1M1"
   lessVersion = "1.3.1"
   awsVersion = "1.4.1"
   quartzVersion = "2.1.7"
@@ -59,8 +59,8 @@ dependencies {
   compile group:"com.fasterxml.jackson.core", name:"jackson-core", version:ext.jacksonVersion
   compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version:ext.jacksonVersion
 
-  compile group:"io.netty",name:"netty-all",version:ext.nettyVersion
-  compile group:"com.hazelcast",name:"hazelcast",version:ext.hazelcastVersion
+  compile group:"io.vertx",name:"vertx-core",version:ext.vertxVersion
+  compile group:"io.vertx",name:"vertx-platform",version:ext.vertxVersion
 
   compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
   compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
