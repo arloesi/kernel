@@ -1,6 +1,10 @@
 package kernel
 
+import java.util._
+import scala.collection.JavaConversions._
+
 import com.google.inject._
+import com.google.common.collect.Maps._
 
 import org.vertx.java.core._
 import org.vertx.java.core.http._
@@ -8,6 +12,7 @@ import org.vertx.java.core.json._
 import org.vertx.java.core.VertxFactory.newVertx
 
 import kernel.network._
+import kernel.service._
 
 class Module(port:Int, assets:String) extends AbstractModule {
     override def configure() {
@@ -36,5 +41,16 @@ class Module(port:Int, assets:String) extends AbstractModule {
     @Provides @Singleton
     def provideServer(vertx:Vertx, server:HttpServer):Server = {
         new Server(vertx, port, server)
+    }
+
+    @Provides @Singleton
+    def provideServices(services:List[Service]):Map[String,Service] = {
+        val map = new HashMap[String,Service]()
+
+        for(service <- services) {
+            map.put(service.name, service)
+        }
+
+        map
     }
 }

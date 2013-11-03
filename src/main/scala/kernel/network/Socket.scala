@@ -1,5 +1,8 @@
 package kernel.network
 
+import java.util._
+import scala.collection.JavaConversions._
+
 import org.vertx.java.core._
 import org.vertx.java.core.json._
 import org.vertx.java.core.sockjs._
@@ -8,8 +11,11 @@ import org.vertx.java.core.buffer._
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import kernel.service._
+import kernel.runtime._
+
 object Socket {
-    class Handler(mapper:ObjectMapper) extends org.vertx.java.core.Handler[SockJSSocket] {
+    class Handler(mapper:ObjectMapper, services:Map[String,Service]) extends org.vertx.java.core.Handler[SockJSSocket] {
         override def handle(socket:SockJSSocket) {
             socket.endHandler(new org.vertx.java.core.Handler[Void]() {
               override def handle(void:Void) {
@@ -35,13 +41,13 @@ object Socket {
                     method match {
                       case "subscribe" => {
                         service.getEvents().get(event) match {
-                          case event:Event[Any] => event.subscribe(connection, x => connection.dispatch(event,x))
+                          case event:Event[_] => () // event.subscribe(connection, x => connection.dispatch(event,x))
                         }
                       }
 
                       case "unsubscribe" => {
                         service.getEvents().get(event) match {
-                          case e:Event[Any] => e.unsubscribe(connection)
+                          case e:Event[_] => () // e.unsubscribe(connection)
                         }
                       }
 
@@ -49,8 +55,7 @@ object Socket {
                         service.getMethods().get(method) match {
                           case m:Method => {
                             val params = json.get("params").toString()
-                            val s = Socket.this.session.load(session)
-                            m.invoke(mapper,connection,params)
+                            m.invoke(mapper,new Socket(socket),params)
                           }
                         }
                       }
@@ -63,5 +68,5 @@ object Socket {
     }
 }
 
-class Socket {
+class Socket(impl:SockJSSocket) {
 }

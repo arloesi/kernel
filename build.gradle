@@ -1,13 +1,12 @@
 
-defaultTasks "installApp"
+// defaultTasks "installApp"
 
 apply plugin: "scala"
 apply plugin: "eclipse"
-apply plugin: "application"
+// apply plugin: "application"
 
 ext {
-  scalaVersion = "2.10.2"
-  testVersion = "2.0.RC3"
+  scalaVersion = "2.10.3"
   groovyVersion = "2.1.2"
   junitVersion = "4.11"
   collectionsVersion = "20040616"
@@ -45,9 +44,10 @@ repositories {
 dependencies {
   scalaTools group:"org.scala-lang", name:"scala-compiler", version:ext.scalaVersion
   compile group:"org.scala-lang", name:"scala-library", version:ext.scalaVersion
+  compile group:"org.scala-lang", name:"scala-actors", version:ext.scalaVersion
+  compile group:"org.scala-lang", name:"scala-reflect", version:ext.scalaVersion
 
   testCompile group:"junit",name:"junit",version:ext.junitVersion
-  testCompile group:"org.scalatest",name:"scalatest_2.10",version:ext.testVersion
   testCompile group:"org.mockito",name:"mockito-all",version:ext.mockitoVersion
 
   compile group:"com.google.inject",name:"guice",version:ext.guiceVersion
@@ -56,13 +56,13 @@ dependencies {
   compile group:"org.apache.commons", name:"commons-lang3", version:ext.langVersion
   compile group:"org.apache.commons", name:"commons-io", version:ext.ioVersion
   compile group:"commons-collections", name:"commons-collections", version:ext.collectionsVersion
-  compile group:"com.google.guava", name:"guava", version:"15.0"
+  // compile group:"com.google.guava", name:"guava", version:"15.0"
   compile group:"org.apache.derby", name:"derby", version:ext.derbyVersion
 
   compile group:"org.eclipse.persistence", name:"eclipselink", version:ext.eclipseVersion
   compile group:"com.fasterxml.jackson.core", name:"jackson-core", version:ext.jacksonVersion
   compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version:ext.jacksonVersion
-  compile group:"com.fasterxml.jackson.dataformat", name:"jackson-dataformat-yaml", "2.3.0-rc1"
+  compile group:"com.fasterxml.jackson.dataformat", name:"jackson-dataformat-yaml", version:"2.3.0-rc1"
 
   compile group:"io.vertx",name:"vertx-core",version:ext.vertxVersion
 
