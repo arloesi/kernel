@@ -1,4 +1,4 @@
-package kernel.content;
+package kernel.schema;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
