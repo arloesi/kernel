@@ -4,7 +4,7 @@ import org.vertx.java.core._
 import org.vertx.java.core.http._
 
 class Server(vert:Vertx, port:Int, http:HttpServer) {
-    val hook = new Thread() {
+    private val hook = new Thread() {
         override def run() {
             unblock()
         }
@@ -15,7 +15,7 @@ class Server(vert:Vertx, port:Int, http:HttpServer) {
     }
 
     def stop() {
-        vert.stop()
+        http.close()
     }
 
     def block() {
@@ -34,5 +34,6 @@ class Server(vert:Vertx, port:Int, http:HttpServer) {
     def run() {
         start()
         block()
+        stop()
     }
 }
