@@ -41,6 +41,8 @@ import org.vertx.java.core.json._
 import kernel.runtime._
 
 object Schema {
+    val MEDIA_TYPE = "application/json"
+
     class Graph(val mappings:Map[String,Mapping[Mapping.MarshallGraph]]) {
         def getJsonSchema():String = {
             val json = new JsonObject()
@@ -60,8 +62,6 @@ object Schema {
 class Schema(
     val context:JAXBContext, factory:EntityManagerFactoryImpl,
     storageGraph:Storage.Graph, mapperGraph:Schema.Graph) {
-
-  val MEDIA_TYPE = "application/json"
 
   class View(val fetchGroup:FetchGroup, val objectGraph:Mapping.MarshallGraph) {}
 
