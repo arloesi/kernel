@@ -1,4 +1,4 @@
-package kernel.model
+package kernel.schema
 
 import javax.persistence._
 
