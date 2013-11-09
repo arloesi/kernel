@@ -40,17 +40,26 @@ import org.eclipse.persistence.jaxb.{
 import org.vertx.java.core.json._
 import kernel.runtime._
 
-object Mapper {
+object Schema {
     class Graph(val mappings:Map[String,Mapping[Mapping.MarshallGraph]]) {
+        def getJsonSchema():String = {
+            val json = new JsonObject()
+
+            for(i <- mappings.values()) {
+              json.putObject(i.name, i.graph.schema)
+            }
+
+            json.toString()
+        }
     }
 
     class Properties(val properties:Map[String,String]) {
     }
 }
 
-class Mapper(
+class Schema(
     val context:JAXBContext, factory:EntityManagerFactoryImpl,
-    storageGraph:Storage.Graph, mapperGraph:Mapper.Graph) {
+    storageGraph:Storage.Graph, mapperGraph:Schema.Graph) {
 
   val MEDIA_TYPE = "application/json"
 
@@ -68,16 +77,6 @@ class Mapper(
 
   def getView(`class`:Class[_],view:Class[_]):View = {
     getView(`class`.getSimpleName().toLowerCase(),view.getSimpleName().toLowerCase())
-  }
-
-  def getJsonSchema():String = {
-    val json = new JsonObject()
-
-    for(i <- mapperGraph.mappings.values()) {
-      json.putObject(i.name, i.graph.schema)
-    }
-
-    json.toString()
   }
 
   def marshal(value:Object,view:View=null):String = {

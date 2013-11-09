@@ -47,7 +47,7 @@ class Module(persistenceUnit:String, views:Set[Class[_]]) {
     }
 
     @Provides @Singleton
-    def provideJAXBContext(@Named("schema") classes:Set[Class[_]], properties:Mapper.Properties):JAXBContext = {
+    def provideJAXBContext(@Named("schema") classes:Set[Class[_]], properties:Schema.Properties):JAXBContext = {
         JAXBContext.newInstance(classes.toArray().map(i => i.asInstanceOf[Class[_]]), properties.properties)
     }
 
@@ -62,7 +62,7 @@ class Module(persistenceUnit:String, views:Set[Class[_]]) {
     }
 
     @Provides @Singleton
-    def provideMapperGraph(@Named("schema") classes:Set[Class[_]], context:JAXBContextImpl):Mapper.Graph = {
-        new Mapper.Graph(Mapping.createGraph(new Mapping.Marshalling(context), classes, context.getXMLContext().getSession(classes.head), views))
+    def provideMapperGraph(@Named("schema") classes:Set[Class[_]], context:JAXBContextImpl):Schema.Graph = {
+        new Schema.Graph(Mapping.createGraph(new Mapping.Marshalling(context), classes, context.getXMLContext().getSession(classes.head), views))
     }
 }
