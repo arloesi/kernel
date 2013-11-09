@@ -86,9 +86,14 @@ class Writer(context:JAXBContext,factory:EntityManagerFactoryImpl) {
 
         val entity = value.asInstanceOf[PersistenceEntity]
         entity._persistence_getId().asInstanceOf[Long] match {
-          case 0 => entity._persistence_setId(descr.getObjectBuilder()
-              .assignSequenceNumber(entity, session.getAbstractSession()))
-          case _ => ()
+          case 0 => {
+              entity._persistence_setId(descr.getObjectBuilder()
+                  .assignSequenceNumber(entity, session.getAbstractSession()))
+              // emit create event
+          }
+          case _ => {
+              // emit update event
+          }
         }
       }
 
