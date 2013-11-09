@@ -99,13 +99,13 @@ class Mapper(
     }
 
     value match {
-      case list:List[Object] => {
+      case list:List[_] => {
         val iter = list.iterator()
         json.append("[")
 
         while(iter.hasNext()) {
           val i = iter.next()
-          json.append(impl(i))
+          json.append(impl(i.asInstanceOf[Object]))
 
           if(iter.hasNext()) {
             json.append(",")
@@ -137,8 +137,6 @@ class Mapper(
     entity
   }
 
-  // org.eclipse.persistence.internal.descriptors.PersistenceEntity for getting and setting the primary key
-
   def unmarshalAndMerge[T<:Object](reader:Reader,session:EntityManagerImpl,meta:Class[T],view:View):Object = {
     val value = unmarshal(reader,meta,view)
     val descr = session.getAbstractSession().getDescriptor(meta)
@@ -151,8 +149,8 @@ class Mapper(
           group.getGroup(m.getAttributeName()) match {
             case group:FetchGroup => {
               m.getAttributeValueFromObject(value) match {
-                case collection:Collection[Object] => {
-                  collection.foreach(x => visit(x,group))
+                case collection:Collection[_] => {
+                  collection.foreach(x => visit(x.asInstanceOf[Object],group))
                 }
                 case entity:Object => {
                   visit(entity,group)
@@ -186,11 +184,11 @@ class Mapper(
     }
 
     value match {
-      case list:List[T] => {
+      case list:List[_] => {
         val result = new LinkedList[T]()
 
         for(i <- list) {
-          result.add(merge(i))
+          result.add(merge(i.asInstanceOf[T]))
         }
 
         result
