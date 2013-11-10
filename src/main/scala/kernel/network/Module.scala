@@ -42,15 +42,4 @@ class Module(port:Int, assets:String) extends AbstractModule {
     def provideServer(vertx:Vertx, server:HttpServer):Server = {
         new Server(vertx, port, server)
     }
-
-    @Provides @Singleton
-    def provideServices(services:List[Service]):Map[String,Service] = {
-        val map = new HashMap[String,Service]()
-
-        for(service <- services) {
-            map.put(service.name, service)
-        }
-
-        map
-    }
 }
