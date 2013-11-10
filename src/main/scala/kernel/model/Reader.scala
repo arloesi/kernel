@@ -28,7 +28,7 @@ class Reader(val context:JAXBContext) {
           val writer = new MappedXMLStreamWriter(new MappedNamespaceConvention(config),buffer)
 
           val marshaller = context.createMarshaller()
-          marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, Schema.MEDIA_TYPE)
+          marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, Mapping.Schema.MEDIA_TYPE)
           marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
           marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false)
           marshaller.setProperty(MarshallerProperties.OBJECT_GRAPH, objectGraph)

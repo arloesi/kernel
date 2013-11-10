@@ -28,7 +28,7 @@ import org.eclipse.persistence.jaxb.{MarshallerProperties,UnmarshallerProperties
 
 import org.vertx.java.core.json._
 
-import kernel.model.Common._
+import kernel.model.Utilities._
 import kernel.schema._
 
 object Mapping {
@@ -199,6 +199,49 @@ object Mapping {
       case a:InstanceVariableAttributeAccessor => (a.getAttributeField(),unwrapField(a.getAttributeField()))
     }
   }
+
+  object Schema {
+    val MEDIA_TYPE = "application/json"
+
+    class Graph(val mappings:java.util.Map[String,Mapping[Mapping.MarshallGraph]]) {
+        def getJsonSchema():String = {
+            val json = new JsonObject()
+
+            for(i <- mappings.values()) {
+              json.putObject(i.name, i.graph.schema)
+            }
+
+            json.toString()
+        }
+    }
+
+    class Visitor(mapping:DatabaseMapping) {
+        def visit(mapping:DatabaseMapping) {
+
+        }
+    }
+}
+
+class Schema(
+    val context:JAXBContext, factory:EntityManagerFactoryImpl,
+    storageGraph:Storage.Graph, mapperGraph:Schema.Graph) {
+
+  class View(val fetchGroup:FetchGroup, val objectGraph:Mapping.MarshallGraph) {}
+
+  def getView(name:String):View = {
+    val p = storageGraph.mappings.get(name).graph
+    val m = mapperGraph.mappings.get(name).graph
+    new View(p,m)
+  }
+
+  def getView(`class`:String,view:String):View = {
+    getView("/"+view+"/"+`class`)
+  }
+
+  def getView(`class`:Class[_],view:Class[_]):View = {
+    getView(`class`.getSimpleName().toLowerCase(),view.getSimpleName().toLowerCase())
+  }
+}
 }
 
 class Mapping[T](mappings:java.util.Map[String,Mapping[T]],builder:Mapping.Builder[T],val descr:ClassDescriptor,val `type`:Class[_],val view:Class[_]) {

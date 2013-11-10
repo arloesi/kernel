@@ -43,7 +43,7 @@ import kernel.runtime._
 class Writer(context:JAXBContext,factory:EntityManagerFactoryImpl) {
   def unmarshal[T<:Object](reader:java.io.Reader,meta:Class[T],objectGraph:ObjectGraph):Object = {
     val unmarshaller = context.createUnmarshaller().asInstanceOf[JAXBUnmarshaller]
-    unmarshaller.setProperty(UnmarshallerProperties.MEDIA_TYPE, Schema.MEDIA_TYPE)
+    unmarshaller.setProperty(UnmarshallerProperties.MEDIA_TYPE, Mapping.Schema.MEDIA_TYPE)
     unmarshaller.setProperty(UnmarshallerProperties.JSON_INCLUDE_ROOT, false)
     unmarshaller.setProperty(UnmarshallerProperties.OBJECT_GRAPH, objectGraph)
     unmarshaller.unmarshal(new StreamSource(reader),meta.asInstanceOf[java.lang.reflect.Type]).getValue().asInstanceOf[Object]
