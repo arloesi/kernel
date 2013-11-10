@@ -1,4 +1,4 @@
-package kernel
+package kernel.network
 
 import java.util._
 import scala.collection.JavaConversions._
