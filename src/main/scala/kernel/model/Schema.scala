@@ -4,7 +4,7 @@ import java.lang.reflect.AccessibleObject
 import java.lang.reflect.ParameterizedType
 
 import java.io._
-import java.util.{LinkedList,LinkedHashMap,Collection,Set}
+import java.util.{List,LinkedList,LinkedHashMap,Collection,Set}
 
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
@@ -31,51 +31,30 @@ import org.vertx.java.core.json._
 import kernel.model.Utilities._
 import kernel.schema._
 
-object Mapping {
+object Schema {
   val typeName = Map(
       classOf[String] -> "string",
       classOf[Int] -> "integer",
       classOf[Long] -> "integer",
       classOf[Float] -> "number")
 
-  def createGraph[T](builder:Mapping.Builder[T], classes:Set[Class[_]],session:AbstractSession,views:Set[Class[_]]) = {
-    val mappings = new LinkedHashMap[String,Mapping[T]]()
-
-    for(i <- classes) {
-      i.getAnnotation(classOf[kernel.schema.Mapping]) match {
-        case null => ()
-        case anno:Serializable => {
-          for(v <- anno.views()) {
-            if(views.contains(v)) {
-              val mapping = new Mapping(mappings,builder,session.getClassDescriptor(i),i,v)
-              mappings.put(mapping.name,mapping)
-            }
-          }
-        }
-      }
-    }
-
-    mappings
-  }
-
-  trait Builder[T] {
-    def build(mapping:Mapping[T],mappings:java.util.Map[String,Mapping[T]]):T
-  }
+  def schemaName(`type`:Class[_], view:Class[_]):String =
+      "/"+`type`.getSimpleName().toLowerCase()+"/"+view.getSimpleName().toLowerCase()
 
   class Persistence extends Builder[FetchGroup] {
     def build(mapping:Mapping[FetchGroup],mappings:java.util.Map[String,Mapping[FetchGroup]]):FetchGroup = {
             val root = new FetchGroup()
 
         def addSubGroup(mapping:Mapping[FetchGroup],group:FetchGroup) {
-        for(i <- mapping.properties) {
-            if(i.schema != null) {
-            val node = new FetchGroup()
-            addFetchGroupAttribute(group, i.mapping.getAttributeName(), node)
-            addSubGroup(mappings.get(i.schema),node)
-            } else {
-            group.addAttribute(i.mapping.getAttributeName())
+            for(i <- mapping.properties) {
+                if(i.schema != null) {
+                    val node = new FetchGroup()
+                    addFetchGroupAttribute(group, i.mapping.getAttributeName(), node)
+                    addSubGroup(mappings.get(i.schema),node)
+                } else {
+                    group.addAttribute(i.mapping.getAttributeName())
+                }
             }
-        }
         }
 
         addSubGroup(mapping,root)
@@ -147,7 +126,7 @@ object Mapping {
     }
   }
 
-  def unwrapView(anno:Property,name:Class[_]):Class[_] = {
+  def unwrapView(anno:kernel.schema.Property,name:Class[_]):Class[_] = {
     val views = new LinkedList[Class[_]]()
 
     if(anno.view() != classOf[Property.DEFAULT]) {
@@ -200,10 +179,9 @@ object Mapping {
     }
   }
 
-  object Schema {
     val MEDIA_TYPE = "application/json"
 
-    class Graph(val mappings:java.util.Map[String,Mapping[Mapping.MarshallGraph]]) {
+    class Graph(val mappings:java.util.Map[String,Mapping[MarshallGraph]]) {
         def getJsonSchema():String = {
             val json = new JsonObject()
 
@@ -215,65 +193,71 @@ object Mapping {
         }
     }
 
-    class Visitor(mapping:DatabaseMapping) {
-        def visit(mapping:DatabaseMapping) {
+    class Property(
+        val annotation:kernel.schema.Property,
+        val mapping:DatabaseMapping,
+        val `type`:Class[_],val view:Class[_],
+        val accessor:AccessibleObject) {
 
+        val schema =
+            if(view == null) null
+            else schemaName(`type`,view)
+    }
+
+    class Mapping(val descr:ClassDescriptor,val view:Class[_], val properties:List[Property]) {
+        def name = schemaName(`type`, view)
+        def `type` = descr.getJavaClass()
+    }
+
+    class Storage(val mapping:Mapping, val fetchGroup:FetchGroup) {
+    }
+
+    class Stream(val mapping:Mapping, val objectGraph:ObjectGraph, val schema:JsonObject) {
+    }
+
+    object Builder {
+        class Mapper(session:AbstractSession, views:Set[Class[_]]) {
+            val mappings = new LinkedList[Mapping]()
+
+            for(descr <- session.getDescriptors().values()) {
+                for(view <- views) {
+                    build(descr, view)
+                }
+            }
+
+            def build(descr:ClassDescriptor, view:Class[_]) {
+              descr.getJavaClass().getAnnotation(classOf[kernel.schema.Mapping]) match {
+                case null => ()
+                case anno:kernel.schema.Mapping => {
+                  for(v <- anno.views()) {
+                      val properties = new LinkedList[Property]()
+
+                      for(mapping <- descr.getMappings()) {
+                        type P = kernel.schema.Property
+                        // Use unwrap to deal with collections.
+                        val (accessor,classTy) = unwrapMapping(mapping)
+
+                        accessor.getAnnotation(classOf[P]) match {
+                          case null => ()
+                          case anno:P => {
+                            val view = unwrapView(anno,v)
+
+                            if(view != null) {
+                              if(classTy.getAnnotation(classOf[kernel.schema.Mapping]) != null) {
+                                  properties.add(new Property(anno,mapping,classTy,view,accessor))
+                              } else {
+                                  properties.add(new Property(anno,mapping,classTy,null,accessor))
+                              }
+                            }
+                          }
+                        }
+                      }
+
+                      mappings.add(new Mapping(descr,v,properties))
+                  }
+                }
+              }
+            }
         }
     }
-}
-
-class Schema(
-    val context:JAXBContext, factory:EntityManagerFactoryImpl,
-    storageGraph:Storage.Graph, mapperGraph:Schema.Graph) {
-
-  class View(val fetchGroup:FetchGroup, val objectGraph:Mapping.MarshallGraph) {}
-
-  def getView(name:String):View = {
-    val p = storageGraph.mappings.get(name).graph
-    val m = mapperGraph.mappings.get(name).graph
-    new View(p,m)
-  }
-
-  def getView(`class`:String,view:String):View = {
-    getView("/"+view+"/"+`class`)
-  }
-
-  def getView(`class`:Class[_],view:Class[_]):View = {
-    getView(`class`.getSimpleName().toLowerCase(),view.getSimpleName().toLowerCase())
-  }
-}
-}
-
-class Mapping[T](mappings:java.util.Map[String,Mapping[T]],builder:Mapping.Builder[T],val descr:ClassDescriptor,val `type`:Class[_],val view:Class[_]) {
-  import Mapping._
-
-  class Property(val annotation:kernel.schema.Property,val mapping:DatabaseMapping,val `type`:Class[_],val view:Class[_],val accessor:AccessibleObject) {
-    val schema = if(view == null) null else "/"+`type`.getSimpleName().toLowerCase()+"/"+view.getSimpleName().toLowerCase()
-  }
-
-  val name = "/"+`type`.getSimpleName().toLowerCase()+"/"+view.getSimpleName().toLowerCase()
-  val properties = new LinkedList[Property]()
-
-  lazy val graph = builder.build(this,mappings)
-
-  for(mapping <- descr.getMappings()) {
-    type P = kernel.schema.Property
-    // Use unwrap to deal with collections.
-    val (accessor,classTy) = unwrapMapping(mapping)
-
-    accessor.getAnnotation(classOf[P]) match {
-      case null => ()
-      case anno:P => {
-        val view = unwrapView(anno,this.view)
-
-        if(view != null) {
-          if(classTy.getAnnotation(classOf[kernel.schema.Mapping]) != null) {
-            properties.add(new Property(anno,mapping,classTy,view,accessor))
-          } else {
-            properties.add(new Property(anno,mapping,classTy,null,accessor))
-          }
-        }
-      }
-    }
-  }
 }

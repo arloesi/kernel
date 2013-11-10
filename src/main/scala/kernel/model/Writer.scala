@@ -41,24 +41,24 @@ import org.vertx.java.core.json._
 import kernel.runtime._
 
 class Writer(context:JAXBContext,factory:EntityManagerFactoryImpl) {
-  def unmarshal[T<:Object](reader:java.io.Reader,meta:Class[T],objectGraph:ObjectGraph):Object = {
+  def write[T<:Object](reader:java.io.Reader, meta:Class[T], objectGraph:ObjectGraph):Object = {
     val unmarshaller = context.createUnmarshaller().asInstanceOf[JAXBUnmarshaller]
     unmarshaller.setProperty(UnmarshallerProperties.MEDIA_TYPE, Mapping.Schema.MEDIA_TYPE)
     unmarshaller.setProperty(UnmarshallerProperties.JSON_INCLUDE_ROOT, false)
     unmarshaller.setProperty(UnmarshallerProperties.OBJECT_GRAPH, objectGraph)
-    unmarshaller.unmarshal(new StreamSource(reader),meta.asInstanceOf[java.lang.reflect.Type]).getValue().asInstanceOf[Object]
+    unmarshaller.unmarshal(new StreamSource(reader), meta.asInstanceOf[java.lang.reflect.Type]).getValue().asInstanceOf[Object]
   }
 
-  def unmarshalAndMerge[T<:Object](reader:java.io.Reader,meta:Class[T],objectGraph:ObjectGraph,fetchGroup:FetchGroup):Object = {
+  def write[T<:Object](reader:java.io.Reader, meta:Class[T], objectGraph:ObjectGraph, fetchGroup:FetchGroup):Object = {
     val session = factory.createEntityManager().asInstanceOf[EntityManagerImpl]
-    val entity = unmarshalAndMerge(reader,session,meta,objectGraph, fetchGroup)
+    val entity = write(reader,session,meta,objectGraph,fetchGroup)
     session.close()
     entity
   }
 
-  def unmarshalAndMerge[T<:Object](reader:java.io.Reader,session:EntityManagerImpl,meta:Class[T],objectGraph:ObjectGraph,fetchGroup:FetchGroup):Object = {
-    val value = unmarshal(reader,meta,objectGraph)
-    val descr = session.getAbstractSession().getDescriptor(meta)
+  def write[T<:Object](reader:java.io.Reader, session:EntityManagerImpl, `type`:Class[T], objectGraph:ObjectGraph, fetchGroup:FetchGroup):Object = {
+    val value = write(reader,`type`,objectGraph)
+    val descr = session.getAbstractSession().getDescriptor(`type`)
 
     def merge(value:Object):T = {
       def visit(value:Object,group:FetchGroup) {
@@ -101,7 +101,7 @@ class Writer(context:JAXBContext,factory:EntityManagerFactoryImpl) {
       session.getTransaction().begin()
       session.merge(value)
       session.getTransaction().commit()
-      session.find(meta,
+      session.find(`type`,
         value.asInstanceOf[PersistenceEntity]
           ._persistence_getId()
           .asInstanceOf[Long])
