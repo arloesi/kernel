@@ -4,7 +4,7 @@ import java.lang.reflect.AccessibleObject
 import java.lang.reflect.ParameterizedType
 
 import java.io._
-import java.util.{List,LinkedList,LinkedHashMap,Collection,Set}
+import java.util.{List,LinkedList,HashMap,LinkedHashMap,Collection,Set}
 
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
@@ -40,91 +40,6 @@ object Schema {
 
   def schemaName(`type`:Class[_], view:Class[_]):String =
       "/"+`type`.getSimpleName().toLowerCase()+"/"+view.getSimpleName().toLowerCase()
-
-  class Persistence extends Builder[FetchGroup] {
-    def build(mapping:Mapping[FetchGroup],mappings:java.util.Map[String,Mapping[FetchGroup]]):FetchGroup = {
-            val root = new FetchGroup()
-
-        def addSubGroup(mapping:Mapping[FetchGroup],group:FetchGroup) {
-            for(i <- mapping.properties) {
-                if(i.schema != null) {
-                    val node = new FetchGroup()
-                    addFetchGroupAttribute(group, i.mapping.getAttributeName(), node)
-                    addSubGroup(mappings.get(i.schema),node)
-                } else {
-                    group.addAttribute(i.mapping.getAttributeName())
-                }
-            }
-        }
-
-        addSubGroup(mapping,root)
-
-        root
-    }
-  }
-
-  class MarshallGraph(val graph:ObjectGraph, val schema:JsonObject) {
-  }
-
-  class Marshalling(context:JAXBContext) extends Builder[MarshallGraph] {
-    def build(mapping:Mapping[MarshallGraph],mappings:java.util.Map[String,Mapping[MarshallGraph]]):MarshallGraph = {
-        val root = new MarshallGraph(JAXBHelper.getJAXBContext(context).createObjectGraph(mapping.`type`), new JsonObject())
-
-        def addSubGroup(mapping:Mapping[MarshallGraph],root:Subgraph) {
-            for(i <- mapping.properties) {
-                if(i.schema != null) {
-                    val node = root.addSubgraph(i.mapping.getAttributeName())
-                    addSubGroup(mappings.get(i.schema),node)
-                } else {
-                    root.addAttributeNodes(i.mapping.getAttributeName())
-                }
-            }
-        }
-
-        for(i <- mapping.properties) {
-            if(i.schema != null) {
-                val node = root.graph.addSubgraph(i.mapping.getAttributeName())
-                addSubGroup(mappings.get(i.schema),node)
-            } else {
-                root.graph.addAttributeNodes(i.mapping.getAttributeName())
-            }
-        }
-
-        val json = root.schema
-        json.putString("id", mapping.name)
-        json.putString("type","object")
-        val props = new JsonObject()
-        json.putObject("properties", props)
-
-        for(i <- mapping.properties) {
-            val p = new JsonObject()
-
-            val x =
-              if(i.mapping.isCollectionMapping()) {
-                p.putString("type","array")
-                p.putArray("default", new JsonArray())
-                val x = new JsonObject()
-                p.putObject("items", x)
-                x
-              } else {
-                p.putObject("default", null)
-                p
-              }
-
-            if(!i.mapping.isRelationalMapping()) {
-              x.putString("type", typeName.get(i.`type`))
-            } else {
-              x.putString("$ref", "/"+i.`type`.getSimpleName().toLowerCase()+"/"+i.view.getSimpleName().toLowerCase()+"#")
-
-              val r = new JsonObject()
-              p.putObject("relation", r)
-              r.putString("property", i.mapping.getRelationshipPartner().getAttributeName())
-            }
-        }
-
-        root
-    }
-  }
 
   def unwrapView(anno:kernel.schema.Property,name:Class[_]):Class[_] = {
     val views = new LinkedList[Class[_]]()
@@ -181,23 +96,19 @@ object Schema {
 
     val MEDIA_TYPE = "application/json"
 
-    class Graph(val mappings:java.util.Map[String,Mapping[MarshallGraph]]) {
-        def getJsonSchema():String = {
-            val json = new JsonObject()
-
-            for(i <- mappings.values()) {
-              json.putObject(i.name, i.graph.schema)
-            }
-
-            json.toString()
-        }
-    }
-
     class Property(
         val annotation:kernel.schema.Property,
-        val mapping:DatabaseMapping,
+        val mapping:Mapping,
+        val database:DatabaseMapping,
         val `type`:Class[_],val view:Class[_],
         val accessor:AccessibleObject) {
+
+        def this(
+            annotation:kernel.schema.Property,
+            database:DatabaseMapping,
+            `type`:Class[_],
+            accessor:AccessibleObject) =
+            this(annotation,null,database,`type`,null,accessor)
 
         val schema =
             if(view == null) null
@@ -209,54 +120,50 @@ object Schema {
         def `type` = descr.getJavaClass()
     }
 
-    class Storage(val mapping:Mapping, val fetchGroup:FetchGroup) {
-    }
+    class Mapper(session:AbstractSession, views:Set[Class[_]]) {
+        val mappings = new HashMap[String,Mapping]()
 
-    class Stream(val mapping:Mapping, val objectGraph:ObjectGraph, val schema:JsonObject) {
-    }
-
-    object Builder {
-        class Mapper(session:AbstractSession, views:Set[Class[_]]) {
-            val mappings = new LinkedList[Mapping]()
-
-            for(descr <- session.getDescriptors().values()) {
-                for(view <- views) {
-                    build(descr, view)
-                }
+        for(descr <- session.getDescriptors().values()) {
+            for(view <- views) {
+                build(descr, view)
             }
+        }
 
-            def build(descr:ClassDescriptor, view:Class[_]) {
-              descr.getJavaClass().getAnnotation(classOf[kernel.schema.Mapping]) match {
-                case null => ()
-                case anno:kernel.schema.Mapping => {
-                  for(v <- anno.views()) {
-                      val properties = new LinkedList[Property]()
+        def build(descr:ClassDescriptor, view:Class[_]):Mapping = {
+            val schemaKey = schemaName(descr.getJavaClass(), view)
 
-                      for(mapping <- descr.getMappings()) {
-                        type P = kernel.schema.Property
-                        // Use unwrap to deal with collections.
-                        val (accessor,classTy) = unwrapMapping(mapping)
+            if(mappings.containsKey(schemaKey)) {
+                mappings.get(schemaKey)
+            }
+            else {
+                val anno:kernel.schema.Mapping = descr.getJavaClass().getAnnotation(classOf[kernel.schema.Mapping])
 
-                        accessor.getAnnotation(classOf[P]) match {
-                          case null => ()
-                          case anno:P => {
-                            val view = unwrapView(anno,v)
+                val properties = new LinkedList[Property]()
 
-                            if(view != null) {
-                              if(classTy.getAnnotation(classOf[kernel.schema.Mapping]) != null) {
-                                  properties.add(new Property(anno,mapping,classTy,view,accessor))
-                              } else {
-                                  properties.add(new Property(anno,mapping,classTy,null,accessor))
-                              }
-                            }
+                for(mapping <- descr.getMappings()) {
+                    type P = kernel.schema.Property
+                    // Use unwrap to deal with collections.
+                    val (accessor,classTy) = unwrapMapping(mapping)
+
+                    accessor.getAnnotation(classOf[P]) match {
+                      case null => ()
+                      case anno:P => {
+                        val v = unwrapView(anno,view)
+
+                        if(view != null) {
+                          if(classTy.getAnnotation(classOf[kernel.schema.Mapping]) != null) {
+                              properties.add(new Property(anno,build(mapping.getDescriptor(),v),mapping,classTy,v,accessor))
+                          } else {
+                              properties.add(new Property(anno,mapping,classTy,accessor))
                           }
                         }
                       }
-
-                      mappings.add(new Mapping(descr,v,properties))
-                  }
+                    }
                 }
-              }
+
+                val mapping = new Mapping(descr,view,properties)
+                mappings.put(schemaKey, mapping)
+                mapping
             }
         }
     }
