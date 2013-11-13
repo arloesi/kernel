@@ -32,12 +32,6 @@ import kernel.model.Utilities._
 import kernel.schema._
 
 object Schema {
-  val typeName = Map(
-      classOf[String] -> "string",
-      classOf[Int] -> "integer",
-      classOf[Long] -> "integer",
-      classOf[Float] -> "number")
-
   def schemaName(`type`:Class[_], view:Class[_]):String =
       "/"+`type`.getSimpleName().toLowerCase()+"/"+view.getSimpleName().toLowerCase()
 

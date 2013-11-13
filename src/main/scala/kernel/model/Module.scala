@@ -56,7 +56,7 @@ class Module(persistenceUnit:String, views:Set[Class[_]]) {
         JAXBHelper.getJAXBContext(context)
     }
 
-    @Provides @Singleton
+    /*@Provides @Singleton
     def provideStorageGraph(@Named("schema") classes:Set[Class[_]], session:DatabaseSessionImpl):Storage.Graph = {
         new Storage.Graph(Mapping.createGraph(new Mapping.Persistence(), classes, session, views))
     }
@@ -64,5 +64,5 @@ class Module(persistenceUnit:String, views:Set[Class[_]]) {
     @Provides @Singleton
     def provideMapperGraph(@Named("schema") classes:Set[Class[_]], context:JAXBContextImpl):Mapping.Schema.Graph = {
         new Mapping.Schema.Graph(Mapping.createGraph(new Mapping.Marshalling(context), classes, context.getXMLContext().getSession(classes.head), views))
-    }
+    }*/
 }
