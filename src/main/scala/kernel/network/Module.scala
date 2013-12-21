@@ -24,12 +24,12 @@ class Module(port:Int, source:String, target:String) extends AbstractModule {
     }
 
     @Provides @Singleton
-    def provideRequestHandler:Handler = {
-        new Handler(source, target)
+    def provideRequestHandler:Handler.Static = {
+        new Handler.Static(source, target)
     }
 
     @Provides @Singleton
-    def provideHttpServer(node:Vertx, handler:Handler, socket:Socket.Handler):HttpServer = {
+    def provideHttpServer(node:Vertx, handler:RouteMatcher, socket:Socket.Handler):HttpServer = {
         val http = node.createHttpServer().requestHandler(handler)
 
         node.createSockJSServer(http).installApp(
