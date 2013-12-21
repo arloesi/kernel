@@ -3,7 +3,9 @@ package kernel.network
 import org.vertx.java.core._
 import org.vertx.java.core.http._
 
-class Server(vert:Vertx, port:Int, http:HttpServer) {
+class Server(runtime:Runtime, vert:Vertx, port:Int, http:HttpServer) {
+    import runtime.{addShutdownHook,removeShutdownHook}
+
     private val hook = new Thread() {
         override def run() {
             unblock()
@@ -19,16 +21,16 @@ class Server(vert:Vertx, port:Int, http:HttpServer) {
     }
 
     def block() {
-        Runtime.getRuntime().addShutdownHook(hook)
+        addShutdownHook(hook)
 
         synchronized {
-            this.wait()
+            wait()
         }
     }
 
     def unblock() {
-        Runtime.getRuntime().removeShutdownHook(hook)
-        this.notify()
+        removeShutdownHook(hook)
+        notify()
     }
 
     def run() {

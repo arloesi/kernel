@@ -10,12 +10,13 @@ import org.vertx.java.core.buffer._
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.inject.Inject
 
 import kernel.service._
 import kernel.runtime._
 
 object Socket {
-    class Handler(mapper:ObjectMapper, services:Map[String,Service]) extends org.vertx.java.core.Handler[SockJSSocket] {
+    class Handler @Inject() (mapper:ObjectMapper, services:Map[String,Service]) extends org.vertx.java.core.Handler[SockJSSocket] {
         override def handle(socket:SockJSSocket) {
             socket.endHandler(new org.vertx.java.core.Handler[Void]() {
               override def handle(void:Void) {
