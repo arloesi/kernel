@@ -16,7 +16,7 @@ object Handler {
 
   class Html(source:String) extends Base {
     override def handle(request:HttpServerRequest) {
-      val path = source+"/"+request.path()+".html"
+      val path = source+"/"+request.params().get("page")+".html"
       request.response().sendFile(path)
     }
   }
