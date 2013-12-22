@@ -69,5 +69,5 @@ object Socket {
     }
 }
 
-class Socket(impl:SockJSSocket) {
+class Socket(socket:SockJSSocket) {
 }

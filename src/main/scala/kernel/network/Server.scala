@@ -29,11 +29,8 @@ class Server(runtime:Runtime, vert:Vertx, port:Int, http:HttpServer) {
     }
 
     def unblock() {
-        removeShutdownHook(hook)
-
-        synchronized {
-          notify()
-        }
+      removeShutdownHook(hook)
+      notify()
     }
 
     def run() {

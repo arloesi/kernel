@@ -9,8 +9,6 @@ import org.mockito.BDDMockito._
 import org.vertx.java.core._
 import org.vertx.java.core.http._
 
-import kernel.runtime.Process._
-
 class ServerTest {
   val port = 8080
 
