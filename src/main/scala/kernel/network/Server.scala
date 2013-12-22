@@ -24,13 +24,16 @@ class Server(runtime:Runtime, vert:Vertx, port:Int, http:HttpServer) {
         addShutdownHook(hook)
 
         synchronized {
-            wait()
+          wait()
         }
     }
 
     def unblock() {
         removeShutdownHook(hook)
-        notify()
+
+        synchronized {
+          notify()
+        }
     }
 
     def run() {
