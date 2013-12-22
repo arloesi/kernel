@@ -23,7 +23,11 @@ class HandlerTest {
 
   @Test
   def handlerTest() {
-    val handler = new Handler("assets/html/",".html","/static/html/",".htm")
+    val handler = new Handler(
+      sourcePrefix="assets/html/",
+      sourceSuffix=".html",
+      targetPrefix="/static/html/",
+      targetSuffix=".htm")
 
     given(request.path()).willReturn("/static/html/page.htm")
 
