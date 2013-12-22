@@ -10,5 +10,8 @@ import org.vertx.java.core._
 import org.vertx.java.core.http._
 
 class SocketTest {
+  @Before
+  def setup() {
 
+  }
 }
