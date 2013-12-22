@@ -20,27 +20,27 @@ class Module(port:Int, source:String, target:String) extends AbstractModule {
 
     @Provides @Singleton
     def provideVertx():Vertx = {
-        newVertx()
+      newVertx()
     }
 
     @Provides @Singleton
     def provideRequestHandler():Handler.Static = {
-        new Handler.Static(source, target)
+      new Handler.Static(source, target)
     }
 
     @Provides @Singleton
     def provideHttpServer(node:Vertx, handler:RouteMatcher, socket:Socket.Handler):HttpServer = {
-        val http = node.createHttpServer().requestHandler(handler)
+      val http = node.createHttpServer().requestHandler(handler)
 
-        node.createSockJSServer(http).installApp(
-            new JsonObject().putString("prefix", "/socket"), socket)
+      node.createSockJSServer(http).installApp(
+        new JsonObject().putString("prefix", "/socket"), socket)
 
-        http
+      http
     }
 
     @Provides @Singleton
     def provideServer(runtime:Runtime, vertx:Vertx, server:HttpServer):Server = {
-        new Server(runtime, vertx, port, server)
+      new Server(runtime, vertx, port, server)
     }
 
     @Provides @Singleton
