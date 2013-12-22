@@ -4,20 +4,21 @@ import org.vertx.java.core._
 import org.vertx.java.core.json._
 import org.vertx.java.core.http._
 
+class Handler(
+  sourcePrefix:String,sourceSuffix:String,
+  targetPrefix:String,targetSuffix:String)
+
+  extends org.vertx.java.core.Handler[HttpServerRequest] {
+
+  override def handle(request:HttpServerRequest) {
+    val path = sourcePrefix+request.path.substring(
+      targetPrefix.length,
+      request.path.length-targetSuffix.length)+sourceSuffix
+    request.response().sendFile(path)
+  }
+}
+
 object Handler {
-  private type Base = org.vertx.java.core.Handler[HttpServerRequest]
-
-  class Static(source:String,target:String) extends Base {
-    override def handle(request:HttpServerRequest) {
-      val path = source+"/"+request.path().substring(target.length)
-      request.response.sendFile(path)
-    }
-  }
-
-  class Html(source:String) extends Base {
-    override def handle(request:HttpServerRequest) {
-      val path = source+"/"+request.params().get("page")+".html"
-      request.response().sendFile(path)
-    }
-  }
+  class Static(source:String,target:String) extends Handler(source,"",target,"")
+  class Html(source:String) extends Handler(source,".html","/","")
 }
