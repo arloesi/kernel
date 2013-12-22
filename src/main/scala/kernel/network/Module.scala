@@ -24,7 +24,7 @@ class Module(port:Int, source:String, target:String) extends AbstractModule {
     }
 
     @Provides @Singleton
-    def provideRequestHandler:Handler.Static = {
+    def provideRequestHandler():Handler.Static = {
         new Handler.Static(source, target)
     }
 
@@ -39,8 +39,8 @@ class Module(port:Int, source:String, target:String) extends AbstractModule {
     }
 
     @Provides @Singleton
-    def provideServer(vertx:Vertx, server:HttpServer):Server = {
-        new Server(Runtime.getRuntime(), vertx, port, server)
+    def provideServer(runtime:Runtime, vertx:Vertx, server:HttpServer):Server = {
+        new Server(runtime, vertx, port, server)
     }
 
     @Provides @Singleton
