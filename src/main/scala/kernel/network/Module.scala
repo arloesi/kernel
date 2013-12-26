@@ -15,7 +15,7 @@ import kernel.network._
 import kernel.service._
 
 class Module(port:Int, source:String, target:String) extends AbstractModule {
-  import Socket.{SocketHandler,DataHandler}
+  import Socket.{ConnectHandler}
 
   override def configure() {
   }
@@ -31,7 +31,7 @@ class Module(port:Int, source:String, target:String) extends AbstractModule {
   }
 
   @Provides @Singleton
-  def provideHttpServer(node:Vertx, handler:RouteMatcher, socket:SocketHandler):HttpServer = {
+  def provideHttpServer(node:Vertx, handler:RouteMatcher, socket:ConnectHandler):HttpServer = {
     val http = node.createHttpServer().requestHandler(handler)
 
     node.createSockJSServer(http).installApp(

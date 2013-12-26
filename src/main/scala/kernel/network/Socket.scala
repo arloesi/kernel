@@ -16,11 +16,23 @@ import kernel.service._
 import kernel.runtime._
 
 object Socket {
-  type EndHandler = org.vertx.java.core.Handler[Void]
+  type VoidHandler = org.vertx.java.core.Handler[Void]
   type BufferHandler = org.vertx.java.core.Handler[Buffer]
   type SockJSHandler = org.vertx.java.core.Handler[SockJSSocket]
 
-  class DataHandler(socket:SockJSSocket, mapper:ObjectMapper,services:Map[String,Service]) extends BufferHandler {
+  class ConnectHandler @Inject() (mapper:ObjectMapper, services:Map[String,Service]) extends SockJSHandler {
+    override def handle(socket:SockJSSocket) {
+      socket.dataHandler(new MessageHandler(socket, mapper, services))
+      socket.endHandler(new DisconnectHandler(socket))
+    }
+  }
+
+  class DisconnectHandler(socket:SockJSSocket) extends VoidHandler {
+    override def handle(void:Void) {
+    }
+  }
+
+  class MessageHandler(socket:SockJSSocket, mapper:ObjectMapper, services:Map[String,Service]) extends BufferHandler {
     override def handle(buffer:Buffer) {
       val json = mapper.readTree(buffer.toString())
 
@@ -38,7 +50,7 @@ object Socket {
           method match {
             case "subscribe" => {
               service.getEvents().get(event) match {
-                case event:Event[_] => () // event.subscribe(connection, x => connection.dispatch(event,x))
+                case e:Event[_] => () // event.subscribe(connection, x => connection.dispatch(event,x))
               }
             }
 
@@ -59,17 +71,6 @@ object Socket {
           }
         }
       }
-    }
-  }
-
-  class SocketHandler @Inject() (mapper:ObjectMapper, services:Map[String,Service]) extends SockJSHandler {
-    override def handle(socket:SockJSSocket) {
-      socket.endHandler(new EndHandler() {
-        override def handle(void:Void) {
-          // disconnect
-        }
-      })
-      socket.dataHandler(new DataHandler(socket, mapper, services))
     }
   }
 }
