@@ -50,7 +50,8 @@ object Socket {
           method match {
             case "subscribe" => {
               service.getEvents().get(event) match {
-                case e:Event[_] => () // event.subscribe(connection, x => connection.dispatch(event,x))
+                case e:Event[_] => ()
+                  // event.subscribe(connection, x => connection.dispatch(event,x))
               }
             }
 

@@ -2,5 +2,5 @@
   "service": "main",
   "method": "subscribe",
   "session": "abc",
-  "event": "my.event"
+  "event": "event"
 }

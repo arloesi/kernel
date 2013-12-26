@@ -7,7 +7,7 @@ import kernel.runtime._
 
 class Service(val service:Object) {
   def getMethods():Map[String,Method] = {methods}
-  def getEvents() = {events}
+  def getEvents():Map[String,Event[_]] = {events}
 
   val name = service.getClass().getSimpleName().toLowerCase()
   val events = new HashMap[String,Event[_]]()
