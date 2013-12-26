@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 import kernel.runtime._
 
 class Service(val service:Object) {
-  def getMethods() = {methods}
+  def getMethods():Map[String,Method] = {methods}
   def getEvents() = {events}
 
   val name = service.getClass().getSimpleName().toLowerCase()
