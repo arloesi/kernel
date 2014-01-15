@@ -5,7 +5,17 @@ import kernel.schema._
 import kernel.schema.Mapped
 
 object SchemaMock {
-    @Mapping
-    class Node extends Mapped {
-    }
+  val SCHEMA = Array(classOf[Node])
+
+  @Mapping
+  class Node extends Mapped {
+  }
+
+  @Mapping
+  class MappedClass extends Mapped {
+  }
+
+  @Mapping
+  class UnmappedClass extends Mapped {
+  }
 }

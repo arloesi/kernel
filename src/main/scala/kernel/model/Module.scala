@@ -36,7 +36,7 @@ class Module(persistenceUnit:String, views:Set[Class[_]]) {
     }
 
     @Provides @Singleton @Named("schema")
-    def provideSchemaSclasses(session:DatabaseSessionImpl):Set[Class[_]] = {
+    def provideSchemaClasses(session:DatabaseSessionImpl):Set[Class[_]] = {
         val classes:Set[Class[_]] = newLinkedHashSet()
 
         for(i <- session.getDescriptors().values()) {

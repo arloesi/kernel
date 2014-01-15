@@ -32,60 +32,7 @@ import kernel.model.Utilities._
 import kernel.schema._
 
 object Mapping {
-  import Schema.schemaName
-
-  def unwrapView(anno:kernel.schema.Property,name:Class[_]):Class[_] = {
-    val views = new LinkedList[Class[_]]()
-
-    if(anno.view() != classOf[Property.DEFAULT]) {
-      views.add(anno.view())
-    }
-
-    if(anno.views().size > 0) {
-      views.addAll(anno.views().toList)
-    }
-
-    for(i <- views) {
-      if(i.isAssignableFrom(name) || name.isAssignableFrom(i)) {
-        val anno = i.getAnnotation(classOf[View])
-
-        if(anno != null && anno.target() != classOf[View.DEFAULT]) {
-          return anno.target()
-        } else {
-          return name
-        }
-      }
-    }
-
-    null
-  }
-
-  def unwrapField(a:java.lang.reflect.Field):Class[_] = {
-    if(classOf[Collection[_]].isAssignableFrom(a.getType())) {
-      a.getGenericType().asInstanceOf[ParameterizedType]
-        .getActualTypeArguments()(0)
-        .asInstanceOf[Class[_]]
-    } else {
-      a.getType()
-    }
-  }
-
-  def unwrapGetMethod(a:java.lang.reflect.Method):Class[_] = {
-    if(classOf[Collection[_]].isAssignableFrom(a.getReturnType())) {
-      a.getGenericReturnType().asInstanceOf[ParameterizedType]
-        .getActualTypeArguments()(0)
-        .asInstanceOf[Class[_]]
-    } else {
-      a.getReturnType()
-    }
-  }
-
-  def unwrapMapping(mapping:DatabaseMapping) = {
-    mapping.getAttributeAccessor() match {
-      case a:MethodAttributeAccessor => (a.getGetMethod(),unwrapGetMethod(a.getGetMethod()))
-      case a:InstanceVariableAttributeAccessor => (a.getAttributeField(),unwrapField(a.getAttributeField()))
-    }
-  }
+  import Schema._
 
     class Property(
         val annotation:kernel.schema.Property,
