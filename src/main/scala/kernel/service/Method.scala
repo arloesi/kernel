@@ -14,7 +14,7 @@ class Method(name:String,service:Object,reflection:java.lang.reflect.Method,perm
     val types = reflection.getParameterTypes()
 
     val offset =
-      if(reflection.getParameterTypes().length > 0 && reflection.getParameterTypes()(0) == socket.getClass()) {
+      if(reflection.getParameterTypes().length > 0 && reflection.getParameterTypes()(0) == classOf[Socket]) {
         args(0) = socket; 1
       } else {0}
 

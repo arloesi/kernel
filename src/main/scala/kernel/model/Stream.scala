@@ -41,7 +41,7 @@ object Stream {
       classOf[Long] -> "integer",
       classOf[Float] -> "number")
 
-    class Mapping(val mapping:Schema.Mapping,val graph:ObjectGraph, val schema:JsonObject) {
+    class Mapping(val mapping:Mapping.Mapping,val graph:ObjectGraph, val schema:JsonObject) {
     }
 
     class Graph(val mappings:java.util.Map[String,Mapping]) {
@@ -56,17 +56,17 @@ object Stream {
         }
     }
 
-    class Mapper(context:JAXBContext, schema:Map[String,Schema.Mapping]) {
+    class Mapper(context:JAXBContext, schema:Map[String,Mapping.Mapping]) {
         val mappings = new HashMap[String,Mapping]()
 
         for(i <- schema.values()) {
             mappings.put(i.name, build(i))
         }
 
-        def build(mapping:Schema.Mapping):Mapping = {
+        def build(mapping:Mapping.Mapping):Mapping = {
             val root = new Mapping(mapping, JAXBHelper.getJAXBContext(context).createObjectGraph(mapping.`type`), new JsonObject())
 
-            def addSubGroup(mapping:Schema.Mapping,root:Subgraph) {
+            def addSubGroup(mapping:Mapping.Mapping,root:Subgraph) {
                 for(i <- mapping.properties) {
                     if(i.schema != null) {
                         val node = root.addSubgraph(i.database.getAttributeName())

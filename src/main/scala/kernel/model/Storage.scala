@@ -15,23 +15,23 @@ import kernel.model.Utilities._
 object Storage {
     import Schema.schemaName
 
-    class Mapping(val mapping:Schema.Mapping, val fetchGroup:FetchGroup) {
+    class Mapping(val mapping:Mapping.Mapping, val fetchGroup:FetchGroup) {
     }
 
     class Properties(val properties:HashMap[String,String]) {
     }
 
-    class Mapper(schema:Map[String,Schema.Mapping]) {
+    class Mapper(schema:Map[String,Mapping.Mapping]) {
         val mappings = new HashMap[String,Mapping]()
 
         for(i <- schema.entrySet()) {
             mappings.put(i.getKey(), build(i.getValue()))
         }
 
-        def build(mapping:Schema.Mapping):Mapping = {
+        def build(mapping:Mapping.Mapping):Mapping = {
             val root = new FetchGroup()
 
-            def addSubGroup(mapping:Schema.Mapping,group:FetchGroup) {
+            def addSubGroup(mapping:Mapping.Mapping,group:FetchGroup) {
                 for(i <- mapping.properties) {
                     if(i.schema != null) {
                         val node = new FetchGroup()
