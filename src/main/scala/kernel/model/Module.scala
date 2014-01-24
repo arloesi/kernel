@@ -21,8 +21,11 @@ import org.eclipse.persistence.jaxb.{
   JAXBMarshaller,JAXBUnmarshaller,JAXBHelper,
   ObjectGraph,Subgraph}
 
-class Module(persistenceUnit:String, views:Set[Class[_]]) {
+class Module(persistenceUnit:String, views:Set[Class[_]]) extends AbstractModule {
     type JAXBContextImpl = org.eclipse.persistence.jaxb.JAXBContext
+
+    override def configure() {
+    }
 
     @Provides @Singleton
     def provideStorage(properties:Storage.Properties):EntityManagerFactoryImpl = {

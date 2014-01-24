@@ -7,6 +7,9 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import org.mockito.BDDMockito._
 
+import com.google.inject._
+import com.google.inject.Guice._
+
 import kernel.schema._
 
 import org.eclipse.persistence.internal.sessions.AbstractSession
@@ -16,11 +19,13 @@ class SchemaTest {
   import Schema._
   import SchemaMock._
 
+  var injector:Injector = _
   var session:AbstractSession = _
 
   @Before
   def setup() {
-
+    injector = createInjector(new Module("schema", VIEWS))
+    session = injector.getInstance(classOf[AbstractSession])
   }
 
   @Test
