@@ -24,7 +24,7 @@ class SchemaTest {
 
   @Before
   def setup() {
-    injector = createInjector(new Module("schema", VIEWS))
+    injector = createInjector(new Module("schema", VIEWS), new ModuleMock())
     session = injector.getInstance(classOf[AbstractSession])
   }
 
