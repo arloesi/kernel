@@ -14,7 +14,7 @@ import org.vertx.java.core.VertxFactory.newVertx
 import kernel.network._
 import kernel.service._
 
-class Module(port:Int, source:String, target:String) extends AbstractModule {
+class Module(port:Int) extends AbstractModule {
   import Socket.{ConnectHandler}
 
   override def configure() {
@@ -23,11 +23,6 @@ class Module(port:Int, source:String, target:String) extends AbstractModule {
   @Provides @Singleton
   def provideVertx():Vertx = {
     newVertx()
-  }
-
-  @Provides @Singleton
-  def provideRequestHandler():Handler.Static = {
-    new Handler.Static(source, target)
   }
 
   @Provides @Singleton
