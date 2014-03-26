@@ -42,34 +42,34 @@ repositories {
 }
 
 dependencies {
-  scalaTools group:"org.scala-lang", name:"scala-compiler", version:ext.scalaVersion
-  compile group:"org.scala-lang", name:"scala-library", version:ext.scalaVersion
-  compile group:"org.scala-lang", name:"scala-actors", version:ext.scalaVersion
-  compile group:"org.scala-lang", name:"scala-reflect", version:ext.scalaVersion
+  scalaTools group:"org.scala-lang", name:"scala-compiler", version:"$scalaVersion"
+  compile group:"org.scala-lang", name:"scala-library", version:"$scalaVersion"
+  compile group:"org.scala-lang", name:"scala-actors", version:"$scalaVersion"
+  compile group:"org.scala-lang", name:"scala-reflect", version:"$scalaVersion"
 
-  testCompile group:"junit",name:"junit",version:ext.junitVersion
-  testCompile group:"org.mockito",name:"mockito-all",version:ext.mockitoVersion
+  testCompile group:"junit",name:"junit",version:"$junitVersion"
+  testCompile group:"org.mockito",name:"mockito-all",version:"$mockitoVersion"
   testCompile group:"org.jukito",name:"jukito",version:"1.3"
 
-  compile group:"com.google.inject",name:"guice",version:ext.guiceVersion
-  compile group:"com.google.inject.extensions",name:"guice-assistedinject",version:ext.guiceVersion
+  compile group:"com.google.inject",name:"guice",version:"$guiceVersion"
+  compile group:"com.google.inject.extensions",name:"guice-assistedinject",version:"$guiceVersion"
 
-  compile group:"org.apache.commons", name:"commons-lang3", version:ext.langVersion
-  compile group:"org.apache.commons", name:"commons-io", version:ext.ioVersion
-  compile group:"commons-collections", name:"commons-collections", version:ext.collectionsVersion
+  compile group:"org.apache.commons", name:"commons-lang3", version:"$langVersion"
+  compile group:"org.apache.commons", name:"commons-io", version:"$ioVersion"
+  compile group:"commons-collections", name:"commons-collections", version:"$collectionsVersion"
   // compile group:"com.google.guava", name:"guava", version:"15.0"
-  compile group:"org.apache.derby", name:"derby", version:ext.derbyVersion
+  compile group:"org.apache.derby", name:"derby", version:"$derbyVersion"
 
-  compile group:"org.eclipse.persistence", name:"eclipselink", version:ext.eclipseVersion
-  compile group:"org.codehaus.jettison", name:"jettison", version:ext.jettisonVersion
-  compile group:"com.fasterxml.jackson.core", name:"jackson-core", version:ext.jacksonVersion
-  compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version:ext.jacksonVersion
+  compile group:"org.eclipse.persistence", name:"eclipselink", version:"$eclipseVersion"
+  compile group:"org.codehaus.jettison", name:"jettison", version:"$jettisonVersion"
+  compile group:"com.fasterxml.jackson.core", name:"jackson-core", version:"$jacksonVersion"
+  compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version:"$jacksonVersion"
   compile group:"com.fasterxml.jackson.dataformat", name:"jackson-dataformat-yaml", version:"2.3.0-rc1"
 
-  compile group:"io.vertx",name:"vertx-core",version:ext.vertxVersion
+  compile group:"io.vertx",name:"vertx-core",version:"$vertxVersion"
 
-  compile group:"com.amazonaws", name:"aws-java-sdk", version:ext.awsVersion
-  compile group:"org.quartz-scheduler", name:"quartz", version:ext.quartzVersion
+  compile group:"com.amazonaws", name:"aws-java-sdk", version:"$awsVersion"
+  compile group:"org.quartz-scheduler", name:"quartz", version:"$quartzVersion"
 }
 
 sourceSets {
