@@ -12,7 +12,6 @@ import org.vertx.java.core.json._
 import org.vertx.java.core.VertxFactory.newVertx
 
 import kernel.network._
-import kernel.service._
 
 class Module(port:Int) extends AbstractModule {
   import Socket.{ConnectHandler}
@@ -38,16 +37,5 @@ class Module(port:Int) extends AbstractModule {
   @Provides @Singleton
   def provideServer(runtime:Runtime, vertx:Vertx, server:HttpServer):Server = {
     new Server(runtime, vertx, port, server)
-  }
-
-  @Provides @Singleton
-  def provideServices(services:List[Service]):Map[String,Service] = {
-    val map = new LinkedHashMap[String,Service]()
-
-    for(i <- services) {
-      map.put(i.name, i)
-    }
-
-    map
   }
 }
