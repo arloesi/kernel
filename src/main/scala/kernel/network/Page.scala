@@ -17,6 +17,7 @@ class Page(source:String,velocity:VelocityEngine) extends Handler {
 
     val template = velocity.getTemplate(source+"/"+request.path()+".html")
     val context = new VelocityContext()
+    // context.put("model", modelFactory.get())
 
     template.merge(context, writer)
 
