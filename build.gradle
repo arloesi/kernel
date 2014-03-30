@@ -32,6 +32,7 @@ ext {
   nettyVersion = "4.0.9.Final"
   camelVersion = "2.12.0"
   guiceVersion = "4.0-beta"
+  velocityVersion = "1.7"
 }
 
 repositories {
@@ -87,6 +88,8 @@ dependencies {
 
   compile group:"com.amazonaws", name:"aws-java-sdk", version:"$awsVersion"
   compile group:"org.quartz-scheduler", name:"quartz", version:"$quartzVersion"
+
+  compile group:"org.apache.velocity", name:"velocity", version:"$velocityVersion"
 }
 
 sourceSets {

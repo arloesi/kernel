@@ -7,4 +7,15 @@ object Utilities {
   type BufferHandler = org.vertx.java.core.Handler[Buffer]
 
   implicit def toFile(source:String) = new File(source)
+
+  class BufferWriter(buffer:Buffer) extends Writer {
+    override def close() {}
+    override def flush() {}
+
+    override def write(source:Array[Char], offset:Int, length:Int) {
+      for(i <- offset to length) {
+        buffer.appendString(source(i).toString)
+      }
+    }
+  }
 }

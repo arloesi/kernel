@@ -28,7 +28,7 @@ import org.vertx.java.core.http.HttpServerRequest
 
 import kernel.runtime.Utilities._
 
-class Model(basePath:String,serviceFactory:ODataServiceFactory) extends org.vertx.java.core.Handler[HttpServerRequest] {
+class Model(basePath:String,serviceFactory:ODataServiceFactory) extends Handler {
   import Model._
 
   override def handle(request:HttpServerRequest) {

@@ -23,7 +23,7 @@ class HandlerTest {
 
   @Test
   def handlerTest() {
-    val handler = new Handler(
+    val handler = new Static(
       sourcePrefix="assets/html/",
       sourceSuffix=".html",
       targetPrefix="/static/html/",
@@ -40,7 +40,7 @@ class HandlerTest {
 
   @Test
   def staticTest() {
-    val handler = new Handler.Static("assets/","/static/")
+    val handler = new Static("assets/","/static/")
 
     given(request.path()).willReturn("/static/styles/main.css")
 
@@ -53,7 +53,7 @@ class HandlerTest {
 
   @Test
   def htmlTest() {
-    val handler = new Handler.Html("html/")
+    val handler = new Static("html/",".html","/","")
 
     given(request.path()).willReturn("/page")
 
