@@ -60,6 +60,19 @@ dependencies {
   compile group:"commons-collections", name:"commons-collections", version:"$collectionsVersion"
 
   compile group:"org.apache.olingo", name:"olingo-odata2-core", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-api", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-ref", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-lib", version:"$olingoVersion"
+
+  compile group:"org.apache.olingo", name:"olingo-odata2-annotation-processor", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-annotation-processor-core", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-annotation-processor-api", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-annotation-processor-ref", version:"$olingoVersion"
+
+  compile group:"org.apache.olingo", name:"olingo-odata2-jpa-processor", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-jpa-processor-core", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-jpa-processor-api", version:"$olingoVersion"
+  compile group:"org.apache.olingo", name:"olingo-odata2-jpa-processor-ref", version:"$olingoVersion"
 
   // compile group:"com.google.guava", name:"guava", version:"15.0"
   compile group:"org.apache.derby", name:"derby", version:"$derbyVersion"

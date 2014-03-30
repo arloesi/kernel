@@ -11,6 +11,8 @@ class Handler(
 
   extends org.vertx.java.core.Handler[HttpServerRequest] {
 
+  import Handler._
+
   override def handle(request:HttpServerRequest) {
     val path = sourcePrefix+request.path.substring(
       targetPrefix.length,
@@ -22,4 +24,12 @@ class Handler(
 object Handler {
   class Static(source:String,target:String) extends Handler(source,"",target,"")
   class Html(source:String) extends Handler(source,".html","/","")
+
+  abstract class Request {
+
+  }
+
+  abstract class Response {
+
+  }
 }
