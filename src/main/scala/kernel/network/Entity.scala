@@ -4,6 +4,8 @@ import java.io._
 import java.util._
 import scala.collection.JavaConversions._
 
+import org.apache.commons.io._
+
 import org.apache.olingo.odata2.api.ODataService
 import org.apache.olingo.odata2.api.ODataServiceFactory
 import org.apache.olingo.odata2.api.commons.HttpHeaders
@@ -69,16 +71,14 @@ class Model(basePath:String,serviceFactory:ODataServiceFactory) extends Handler 
               request.response().end(entity)
             }
 
-            case stream:InputStream => {
-              var data:Int = 0
+            case input:InputStream => {
               val buffer = new Buffer()
+              val output = new BufferOutputStream(buffer)
 
-              while((data = stream.read()) != -1) {
-                buffer.appendByte(data.toByte)
-              }
+              IOUtils.copy(input, output)
+              input.close()
 
               request.response().end(buffer)
-              stream.close()
             }
           }
         }

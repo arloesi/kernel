@@ -18,4 +18,10 @@ object Utilities {
       }
     }
   }
+
+  class BufferOutputStream(buffer:Buffer) extends OutputStream {
+    override def write(b:Int) {
+      buffer.appendByte(b.toByte)
+    }
+  }
 }
